@@ -66,3 +66,21 @@ export const refreshToken = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getMe = async (req, res, next) => {
+  try {
+    const result = await authService.getMe(req.user.sub);
+    return sendSuccess(res, 'Current user', result);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const logout = async (req, res, next) => {
+  try {
+    // For stateless JWTs, we just send success. If we maintained a blacklist, we'd add it here.
+    return sendSuccess(res, 'Logged out successfully', null);
+  } catch (err) {
+    next(err);
+  }
+};

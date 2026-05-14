@@ -8,7 +8,6 @@ const businessSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
     },
     businessName: {
       type: String,
@@ -19,11 +18,14 @@ const businessSchema = new Schema(
     taxCode: {
       type: String,
       trim: true,
+      unique: true,
+      sparse: true,
+
     },
     businessType: {
       type: String,
-      enum: ['household', 'company', 'store', 'online_shop', 'other'],
-      default: 'household',
+      enum: ['bán lẻ', 'dịch vụ', 'khác'],
+      default: 'bán lẻ',
     },
     address: {
       type: String,
@@ -54,7 +56,6 @@ const businessSchema = new Schema(
 );
 
 businessSchema.index({ ownerId: 1 });
-businessSchema.index({ taxCode: 1 });
 
 const Business = mongoose.model('Business', businessSchema);
 

@@ -5,19 +5,34 @@ export const validate = ({ body, query, params } = {}) =>
     if (body) {
       const result = body(req.body);
       if (!result.success) return sendError(res, result.message, 400);
-      req.body = result.data;
+      Object.defineProperty(req, 'body', {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     if (query) {
       const result = query(req.query);
       if (!result.success) return sendError(res, result.message, 400);
-      req.query = result.data;
+      Object.defineProperty(req, 'query', {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     if (params) {
       const result = params(req.params);
       if (!result.success) return sendError(res, result.message, 400);
-      req.params = result.data;
+      Object.defineProperty(req, 'params', {
+        value: result.data,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
     }
 
     next();

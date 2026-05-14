@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
+import { RevenueWordExportDialog } from '../../components/reports/RevenueWordExportDialog.jsx';
 import { RevenueDeleteDialog } from '../../components/revenues/RevenueDeleteDialog.jsx';
 import { RevenueFilters } from '../../components/revenues/RevenueFilters.jsx';
 import { RevenueSummaryCards } from '../../components/revenues/RevenueSummaryCards.jsx';
@@ -8,13 +9,16 @@ import { RevenueTable } from '../../components/revenues/RevenueTable.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
 import { FormSuccess } from '../../components/ui/FormSuccess.jsx';
+import { useToast } from '../../components/ui/useToast.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
+import { useExportRevenueWord } from '../../hooks/useExportRevenueWord.js';
 import {
   useDeleteRevenue,
   useRevenues,
   useRevenueSummary,
 } from '../../hooks/useRevenues.js';
+import { downloadBlob } from '../../utils/downloadBlob.js';
 
 const useDebouncedValue = (value, delay = 400) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -34,9 +38,11 @@ export const RevenueListPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
   const [successMessage, setSuccessMessage] = useState(location.state?.successMessage || '');
   const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
   const [selectedRevenue, setSelectedRevenue] = useState(null);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [filters, setFilters] = useState({
     keyword: '',
     fromDate: '',
@@ -59,9 +65,10 @@ export const RevenueListPage = () => {
   const revenuesQuery = useRevenues(queryParams);
   const summaryQuery = useRevenueSummary(queryParams);
   const deleteRevenueMutation = useDeleteRevenue();
+  const exportRevenueWordMutation = useExportRevenueWord();
 
   const businessOptions = useMemo(() => {
-    const businesses = businessesQuery.data || [];
+    const businesses = businessesQuery.data?.rows || [];
 
     return [
       { id: 'all', name: 'Tất cả hộ kinh doanh' },
@@ -114,6 +121,36 @@ export const RevenueListPage = () => {
     }
   };
 
+  const selectedBusinessItem = businessOptions.find((item) => item.id === filters.businessId);
+
+  const handleOpenExportDialog = () => {
+    if (filters.businessId === 'all') {
+      toast.error('Vui lòng chọn một hộ kinh doanh để xuất Word');
+      return;
+    }
+
+    setIsExportDialogOpen(true);
+  };
+
+  const handleExportRevenueWord = async ({ periodType, value }) => {
+    try {
+      const result = await exportRevenueWordMutation.mutateAsync({
+        businessId: filters.businessId,
+        periodType,
+        value,
+      });
+
+      downloadBlob(result.blob, result.fileName);
+      toast.success('Xuất Word thành công');
+      setIsExportDialogOpen(false);
+    } catch (error) {
+      toast.error(error.message || 'Không thể xuất file Word');
+      if (error.status === 401) {
+        navigate('/login', { replace: true });
+      }
+    }
+  };
+
   const errorMessage =
     businessesQuery.error?.message ||
     revenuesQuery.error?.message ||
@@ -137,9 +174,14 @@ export const RevenueListPage = () => {
             </p>
           </div>
 
-          <Button type="button" size="lg" onClick={() => navigate('/revenues/create')}>
-            Thêm doanh thu
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button type="button" variant="secondary" size="lg" onClick={handleOpenExportDialog}>
+              Xuất Word
+            </Button>
+            <Button type="button" size="lg" onClick={() => navigate('/revenues/create')}>
+              Thêm doanh thu
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -185,6 +227,14 @@ export const RevenueListPage = () => {
         onConfirm={handleDeleteConfirm}
         isDeleting={deleteRevenueMutation.isPending}
         errorMessage={deleteErrorMessage}
+      />
+
+      <RevenueWordExportDialog
+        isOpen={isExportDialogOpen}
+        businessName={selectedBusinessItem?.name}
+        isSubmitting={exportRevenueWordMutation.isPending}
+        onClose={() => setIsExportDialogOpen(false)}
+        onSubmit={handleExportRevenueWord}
       />
     </DashboardLayout>
   );

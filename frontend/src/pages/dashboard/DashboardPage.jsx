@@ -4,8 +4,11 @@ import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx'
 import { PaymentSplitCard } from '../../components/dashboard/PaymentSplitCard.jsx';
 import { RecentRevenueTable } from '../../components/dashboard/RecentRevenueTable.jsx';
 import { RevenueChart } from '../../components/dashboard/RevenueChart.jsx';
+import { RevenueWordExportDialog } from '../../components/reports/RevenueWordExportDialog.jsx';
 import { StatCard } from '../../components/dashboard/StatCard.jsx';
+import { Button } from '../../components/ui/Button.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
+import { useToast } from '../../components/ui/useToast.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
 import {
@@ -13,6 +16,8 @@ import {
   useRecentRevenues,
   useRevenueChart,
 } from '../../hooks/useDashboard.js';
+import { useExportRevenueWord } from '../../hooks/useExportRevenueWord.js';
+import { downloadBlob } from '../../utils/downloadBlob.js';
 
 const periodOptions = [
   { id: 'day', label: 'Ngày' },
@@ -29,7 +34,9 @@ const titlesByPeriod = {
 export const DashboardPage = () => {
   const [selectedBusiness, setSelectedBusiness] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[0].id);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const { user, logout } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const dashboardParams = useMemo(
@@ -46,9 +53,10 @@ export const DashboardPage = () => {
   const statsQuery = useDashboardStats(dashboardParams);
   const chartQuery = useRevenueChart(dashboardParams);
   const recentRevenuesQuery = useRecentRevenues(dashboardParams);
+  const exportRevenueWordMutation = useExportRevenueWord();
 
   const businessOptions = useMemo(() => {
-    const businesses = businessesQuery.data || [];
+    const businesses = businessesQuery.data?.rows || [];
 
     return [
       { id: 'all', name: 'Tất cả hộ kinh doanh' },
@@ -96,6 +104,36 @@ export const DashboardPage = () => {
     navigate('/login', { replace: true });
   };
 
+  const selectedBusinessItem = businessOptions.find((item) => item.id === selectedBusiness);
+
+  const handleOpenExportDialog = () => {
+    if (selectedBusiness === 'all') {
+      toast.error('Vui lòng chọn một hộ kinh doanh để xuất Word');
+      return;
+    }
+
+    setIsExportDialogOpen(true);
+  };
+
+  const handleExportRevenueWord = async ({ periodType, value }) => {
+    try {
+      const result = await exportRevenueWordMutation.mutateAsync({
+        businessId: selectedBusiness,
+        periodType,
+        value,
+      });
+
+      downloadBlob(result.blob, result.fileName);
+      toast.success('Xuất Word thành công');
+      setIsExportDialogOpen(false);
+    } catch (error) {
+      toast.error(error.message || 'Không thể xuất file Word');
+      if (error.status === 401) {
+        navigate('/login', { replace: true });
+      }
+    }
+  };
+
   const isLoading = statsQuery.isLoading || chartQuery.isLoading || recentRevenuesQuery.isLoading;
   const errorMessage =
     statsQuery.error?.message || chartQuery.error?.message || recentRevenuesQuery.error?.message;
@@ -111,21 +149,27 @@ export const DashboardPage = () => {
     >
       <section className="space-y-4">
         <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1 sm:inline-grid sm:min-w-80">
-            {periodOptions.map((period) => (
-              <button
-                key={period.id}
-                type="button"
-                onClick={() => setSelectedPeriod(period.id)}
-                className={`rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
-                  selectedPeriod === period.id
-                    ? 'bg-teal-700 text-white'
-                    : 'text-slate-600 hover:bg-white hover:text-slate-800'
-                }`}
-              >
-                {period.label}
-              </button>
-            ))}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1 sm:inline-grid sm:min-w-80">
+              {periodOptions.map((period) => (
+                <button
+                  key={period.id}
+                  type="button"
+                  onClick={() => setSelectedPeriod(period.id)}
+                  className={`rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                    selectedPeriod === period.id
+                      ? 'bg-teal-700 text-white'
+                      : 'text-slate-600 hover:bg-white hover:text-slate-800'
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+            </div>
+
+            <Button type="button" variant="secondary" size="sm" onClick={handleOpenExportDialog}>
+              Xuất Word
+            </Button>
           </div>
         </div>
 
@@ -164,6 +208,14 @@ export const DashboardPage = () => {
           <RecentRevenueTable rows={recentRevenuesQuery.data?.rows || []} />
         </>
       )}
+
+      <RevenueWordExportDialog
+        isOpen={isExportDialogOpen}
+        businessName={selectedBusinessItem?.name}
+        isSubmitting={exportRevenueWordMutation.isPending}
+        onClose={() => setIsExportDialogOpen(false)}
+        onSubmit={handleExportRevenueWord}
+      />
     </DashboardLayout>
   );
 };

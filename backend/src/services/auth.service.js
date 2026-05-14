@@ -19,12 +19,16 @@ const sanitizeUser = (user) => ({
   _id: user._id,
   username: user.username,
   email: user.email,
+  emailVerified: Boolean(user.emailVerified),
+  emailVerifiedAt: user.emailVerifiedAt,
   name: user.name,
   gender: user.gender,
   dob: user.dob,
   avatarId: user.avatarId,
   role: user.role,
   status: user.status,
+  lastLogin: user.lastLogin,
+  lastLoginMeta: user.lastLoginMeta,
   preferences: user.preferences,
   authProvider: user.authProvider,
   createdAt: user.createdAt,
@@ -82,6 +86,12 @@ export const loginUser = async ({ identifier, password }) => {
   if (user.status === 'inactive') throw createError('Account is inactive', 403);
 
   user.lastLogin = new Date();
+  user.lastLoginMeta = {
+    userAgent: null,
+    platform: null,
+    browser: null,
+    ipAddress: null,
+  };
   await user.save();
 
   const payload = buildTokenPayload(user);
@@ -120,6 +130,10 @@ export const loginWithGoogle = async (idToken) => {
       user.googleId = googleId;
       user.authProvider = 'google';
     }
+    user.emailVerified = Boolean(email);
+    if (email && !user.emailVerifiedAt) {
+      user.emailVerifiedAt = new Date();
+    }
     user.lastLogin = new Date();
     await user.save();
   } else {
@@ -129,6 +143,8 @@ export const loginWithGoogle = async (idToken) => {
       name,
       avatarId: picture,
       authProvider: 'google',
+      emailVerified: Boolean(email),
+      emailVerifiedAt: email ? new Date() : undefined,
     });
   }
 
@@ -157,4 +173,12 @@ export const refreshAccessToken = async (token) => {
 
   const payload = buildTokenPayload(user);
   return { accessToken: generateAccessToken(payload) };
+};
+
+// ─── Get Me ───────────────────────────────────────────────────────────────────
+
+export const getMe = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) throw createError('User not found', 404);
+  return { user: sanitizeUser(user) };
 };

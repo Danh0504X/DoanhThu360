@@ -1,6 +1,6 @@
 import { buildValidationResult } from './common.validation.js';
 
-const BUSINESS_TYPES = ['household', 'company', 'store', 'online_shop', 'other'];
+const BUSINESS_TYPES = ['retail', 'food_service', 'beauty_service', 'construction_materials', 'other'];
 const BUSINESS_STATUSES = ['active', 'inactive'];
 
 const hasOwn = (payload, key) => Object.prototype.hasOwnProperty.call(payload, key);
@@ -53,10 +53,10 @@ const parseOptionalEmail = (value) => {
 const parseBusinessPayload = (payload, { partial = false } = {}) => {
   const data = {};
 
-  if (!partial || hasOwn(payload, 'businessName')) {
+  if (!partial || hasOwn(payload, 'businessName') || hasOwn(payload, 'name')) {
     const result = partial
-      ? parseOptionalString(payload.businessName, 'businessName', 255)
-      : parseRequiredString(payload.businessName, 'businessName', 255);
+      ? parseOptionalString(payload.businessName ?? payload.name, 'businessName', 255)
+      : parseRequiredString(payload.businessName ?? payload.name, 'businessName', 255);
     if (result.message) return buildValidationResult(null, result.message);
     if (result.value !== undefined) data.businessName = result.value;
   }
@@ -108,6 +108,34 @@ export const listBusinessesQuerySchema = (query) => {
     const result = parseOptionalEnum(query.status, 'status', BUSINESS_STATUSES);
     if (result.message) return buildValidationResult(null, result.message);
     if (result.value !== undefined) data.status = result.value;
+  }
+
+  if (hasOwn(query, 'type')) {
+    const result = parseOptionalEnum(query.type, 'type', BUSINESS_TYPES);
+    if (result.message) return buildValidationResult(null, result.message);
+    if (result.value !== undefined) data.type = result.value;
+  }
+
+  if (hasOwn(query, 'keyword')) {
+    const result = parseOptionalString(query.keyword, 'keyword', 255);
+    if (result.message) return buildValidationResult(null, result.message);
+    if (result.value !== undefined) data.keyword = result.value;
+  }
+
+  if (hasOwn(query, 'page')) {
+    const page = Number(query.page);
+    if (!Number.isInteger(page) || page < 1) {
+      return buildValidationResult(null, 'page must be a positive integer');
+    }
+    data.page = page;
+  }
+
+  if (hasOwn(query, 'limit')) {
+    const limit = Number(query.limit);
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      return buildValidationResult(null, 'limit must be between 1 and 100');
+    }
+    data.limit = limit;
   }
 
   return buildValidationResult(data);

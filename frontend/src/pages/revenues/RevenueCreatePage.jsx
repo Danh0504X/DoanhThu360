@@ -25,7 +25,7 @@ export const RevenueCreatePage = () => {
   const [selectedBusiness, setSelectedBusiness] = useState('all');
 
   const businessOptions = useMemo(
-    () => (businessesQuery.data || []).map((business) => ({
+    () => (businessesQuery.data?.rows || []).map((business) => ({
       id: business._id,
       name: business.businessName,
     })),

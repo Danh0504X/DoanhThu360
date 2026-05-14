@@ -3,8 +3,8 @@ import { NavLink } from 'react-router-dom';
 const mobileItems = [
   { id: 'overview', label: 'Trang chủ', to: '/dashboard', icon: '⌂' },
   { id: 'revenue', label: 'Doanh thu', to: '/revenues', icon: '◫' },
-  { id: 'reports', label: 'Báo cáo', icon: '▥' },
-  { id: 'profile', label: 'Cá nhân', icon: '◌' },
+  { id: 'business', label: 'Hộ KD', to: '/businesses', icon: '▣' },
+  { id: 'account', label: 'Tài khoản', to: '/account', icon: '◌' },
 ];
 
 export const MobileBottomNav = ({ activeItem = 'overview' }) => (
@@ -16,20 +16,11 @@ export const MobileBottomNav = ({ activeItem = 'overview' }) => (
           isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-500'
         }`;
 
-        if (item.to) {
-          return (
-            <NavLink key={item.id} to={item.to} className={className}>
-              <span className="mb-1 block text-base">{item.icon}</span>
-              {item.label}
-            </NavLink>
-          );
-        }
-
         return (
-          <button key={item.id} type="button" className={className}>
+          <NavLink key={item.id} to={item.to} className={className}>
             <span className="mb-1 block text-base">{item.icon}</span>
             {item.label}
-          </button>
+          </NavLink>
         );
       })}
     </div>

@@ -36,7 +36,7 @@ export const RevenueEditPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const businessOptions = useMemo(
-    () => (businessesQuery.data || []).map((business) => ({
+    () => (businessesQuery.data?.rows || []).map((business) => ({
       id: business._id,
       name: business.businessName,
     })),

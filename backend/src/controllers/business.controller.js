@@ -59,3 +59,19 @@ export const deleteBusinessController = async (req, res, next) => {
     next(error);
   }
 };
+
+export const changeBusinessStatusController = async (req, res, next) => {
+  try {
+    const business = await businessService.changeBusinessStatusById(
+      getAuthUserId(req),
+      req.params.id,
+      req.body.status,
+    );
+
+    if (!business) return sendError(res, 'Business not found', 404);
+
+    return sendSuccess(res, 'Business status updated successfully', business);
+  } catch (error) {
+    next(error);
+  }
+};

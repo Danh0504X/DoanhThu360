@@ -1,5 +1,9 @@
 export const queryKeys = {
   currentUser: ['currentUser'],
+  profile: ['profile'],
+  recentActivities: ['recentActivities'],
+  businesses: (params = {}) => ['businesses', params],
+  business: (id) => ['business', id],
   revenues: (params = {}) => ['revenues', params],
   revenue: (id) => ['revenue', id],
   revenueSummary: (params = {}) => ['revenueSummary', params],

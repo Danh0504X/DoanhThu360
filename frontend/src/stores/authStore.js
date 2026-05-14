@@ -1,14 +1,15 @@
-const TOKEN_KEY = 'accessToken';
-const USER_KEY = 'authUser';
-const REMEMBER_KEY = 'rememberMe';
+import { getAccessToken, setAccessToken, setRefreshToken, clearTokens, setRememberMe } from '../utils/tokenStorage.js';
 
-const getStorage = (rememberMe) => (rememberMe ? localStorage : sessionStorage);
+const USER_KEY = 'authUser';
+
+const getStorage = () => {
+  const rememberMe = localStorage.getItem('rememberMe') === 'true';
+  return rememberMe ? localStorage : sessionStorage;
+};
 
 const readStoredUser = () => {
   const rawUser = localStorage.getItem(USER_KEY) || sessionStorage.getItem(USER_KEY);
-
   if (!rawUser) return null;
-
   try {
     return JSON.parse(rawUser);
   } catch {
@@ -17,8 +18,9 @@ const readStoredUser = () => {
 };
 
 let state = {
-  token: localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY),
+  token: getAccessToken(),
   user: readStoredUser(),
+  isAuthLoading: true, // initial loading state
 };
 
 const listeners = new Set();
@@ -38,7 +40,6 @@ const setState = (nextState) => {
 export const authStore = {
   subscribe(listener) {
     listeners.add(listener);
-
     return () => listeners.delete(listener);
   },
   getSnapshot() {
@@ -50,42 +51,42 @@ export const authStore = {
   getUser() {
     return state.user;
   },
-  setSession({ accessToken, user, rememberMe = false }) {
+  getIsAuthLoading() {
+    return state.isAuthLoading;
+  },
+  setAuthLoading(isLoading) {
+    setState({ isAuthLoading: isLoading });
+  },
+  setSession({ accessToken, refreshToken, user, rememberMe = false }) {
     authStore.clearSession(false);
 
-    const storage = getStorage(rememberMe);
-
-    if (accessToken) {
-      storage.setItem(TOKEN_KEY, accessToken);
-    }
+    setRememberMe(rememberMe);
+    setAccessToken(accessToken);
+    setRefreshToken(refreshToken);
 
     if (user) {
+      const storage = getStorage();
       storage.setItem(USER_KEY, JSON.stringify(user));
     }
 
-    localStorage.setItem(REMEMBER_KEY, String(rememberMe));
     setState({ token: accessToken || null, user: user || null });
   },
   setUser(user) {
-    const rememberMe = localStorage.getItem(REMEMBER_KEY) === 'true';
-    const storage = getStorage(rememberMe);
-
     if (user) {
+      const storage = getStorage();
       storage.setItem(USER_KEY, JSON.stringify(user));
     } else {
-      storage.removeItem(USER_KEY);
+      localStorage.removeItem(USER_KEY);
+      sessionStorage.removeItem(USER_KEY);
     }
-
     setState({ user: user || null });
   },
   clearSession(emit = true) {
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(REMEMBER_KEY);
-    sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(USER_KEY);
 
-    state = { token: null, user: null };
+    state = { token: null, user: null, isAuthLoading: false };
     if (emit) emitChange();
   },
 };

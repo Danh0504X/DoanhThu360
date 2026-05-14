@@ -20,6 +20,13 @@ const userSchema = new Schema(
       trim: true,
       lowercase: true,
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    emailVerifiedAt: {
+      type: Date,
+    },
     password: {
       type: String,
       select: false, // never returned by default; use .select('+password') when needed
@@ -62,6 +69,24 @@ const userSchema = new Schema(
     },
     lastLogin: {
       type: Date,
+    },
+    lastLoginMeta: {
+      userAgent: {
+        type: String,
+        trim: true,
+      },
+      platform: {
+        type: String,
+        trim: true,
+      },
+      browser: {
+        type: String,
+        trim: true,
+      },
+      ipAddress: {
+        type: String,
+        trim: true,
+      },
     },
     preferences: {
       type: Schema.Types.Mixed,

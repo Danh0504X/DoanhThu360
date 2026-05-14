@@ -3,6 +3,8 @@ import userRoutes from './user.routes.js';
 import authRoutes from './auth.routes.js';
 import businessRoutes from './business.routes.js';
 import revenueEntryRoutes from './revenueEntry.routes.js';
+import accountRoutes from './account.routes.js';
+import reportRoutes from './report.route.js';
 
 const router = express.Router();
 
@@ -17,5 +19,7 @@ router.use('/auth', authRoutes);
 router.use('/businesses', businessRoutes);
 router.use('/revenue-entries', revenueEntryRoutes);
 router.use('/users', userRoutes);
+router.use('/account', accountRoutes);
+router.use('/reports', reportRoutes);
 
 export default router;

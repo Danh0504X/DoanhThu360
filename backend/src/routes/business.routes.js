@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  changeBusinessStatusController,
   createBusinessController,
   deleteBusinessController,
   getBusinessByIdController,
@@ -28,5 +29,7 @@ router
   .get(getBusinessByIdController)
   .put(validate({ body: updateBusinessSchema }), updateBusinessController)
   .delete(deleteBusinessController);
+
+router.patch('/:id/status', changeBusinessStatusController);
 
 export default router;

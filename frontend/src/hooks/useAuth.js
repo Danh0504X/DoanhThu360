@@ -1,21 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
 import { authService } from '../services/authService.js';
 import { queryKeys } from '../lib/queryKeys.js';
 import { authStore } from '../stores/authStore.js';
-
-export const useCurrentUser = () => {
-  const snapshot = authStore.getSnapshot();
-
-  return useQuery({
-    queryKey: queryKeys.currentUser,
-    queryFn: async () => {
-      const response = await authService.getMe();
-      return response?.data || response || null;
-    },
-    initialData: snapshot.user,
-    enabled: Boolean(snapshot.token),
-  });
-};
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -32,6 +19,7 @@ export const useLogin = () => {
       const responseData = response?.data || response;
       authStore.setSession({
         accessToken: responseData?.accessToken || null,
+        refreshToken: responseData?.refreshToken || null,
         user: responseData?.user || null,
         rememberMe,
       });
@@ -69,15 +57,16 @@ export const useLogout = () => {
 };
 
 export const useAuth = () => {
-  const currentUserQuery = useCurrentUser();
+  const state = useSyncExternalStore(authStore.subscribe, authStore.getSnapshot);
+
   const loginMutation = useLogin();
   const registerMutation = useRegister();
   const logoutMutation = useLogout();
 
   return {
-    user: currentUserQuery.data || null,
-    isAuthenticated: Boolean(authStore.getToken()),
-    isLoading: currentUserQuery.isLoading,
+    user: state.user,
+    isAuthenticated: Boolean(state.token),
+    isLoading: state.isAuthLoading,
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,

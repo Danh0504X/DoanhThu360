@@ -3,9 +3,9 @@ import { NavLink } from 'react-router-dom';
 const navItems = [
   { id: 'overview', label: 'Tổng quan', to: '/dashboard' },
   { id: 'revenue', label: 'Doanh thu', to: '/revenues' },
-  { id: 'business', label: 'Hộ kinh doanh' },
+  { id: 'business', label: 'Hộ kinh doanh', to: '/businesses' },
   { id: 'reports', label: 'Báo cáo' },
-  { id: 'account', label: 'Tài khoản' },
+  { id: 'account', label: 'Tài khoản', to: '/account' },
 ];
 
 export const Sidebar = ({ onLogout, activeItem = 'overview' }) => (

@@ -9,6 +9,10 @@ export const DashboardLayout = ({
   onBusinessChange,
   onLogout,
   activeNav = 'overview',
+  pageTitle,
+  pageDescription,
+  headingTitle,
+  headingDescription,
   children,
 }) => (
   <div className="min-h-screen bg-slate-50 px-4 py-4 sm:px-5 lg:px-6">
@@ -23,6 +27,10 @@ export const DashboardLayout = ({
             selectedBusiness={selectedBusiness}
             onBusinessChange={onBusinessChange}
             onLogout={onLogout}
+            pageTitle={pageTitle}
+            pageDescription={pageDescription}
+            headingTitle={headingTitle}
+            headingDescription={headingDescription}
           />
           {children}
         </div>

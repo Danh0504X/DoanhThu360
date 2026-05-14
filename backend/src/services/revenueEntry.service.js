@@ -2,23 +2,10 @@ import mongoose from 'mongoose';
 import Business from '../models/Business.js';
 import RevenueEntry from '../models/RevenueEntry.js';
 import { createError } from '../utils/errors.js';
+import { toVietnamDateBoundary, VIETNAM_TIMEZONE } from '../utils/timezone.js';
 
 const buildRevenueTotal = (cashAmount = 0, bankAmount = 0) =>
   Number(cashAmount || 0) + Number(bankAmount || 0);
-
-const normalizeDateRange = (date, boundary) => {
-  const normalizedDate = new Date(date);
-
-  if (boundary === 'start') {
-    normalizedDate.setHours(0, 0, 0, 0);
-  }
-
-  if (boundary === 'end') {
-    normalizedDate.setHours(23, 59, 59, 999);
-  }
-
-  return normalizedDate;
-};
 
 const buildRevenueMatch = (userId, filters = {}) => {
   const match = {
@@ -36,8 +23,8 @@ const buildRevenueMatch = (userId, filters = {}) => {
 
   if (filters.from || filters.to) {
     match.revenueDate = {};
-    if (filters.from) match.revenueDate.$gte = normalizeDateRange(filters.from, 'start');
-    if (filters.to) match.revenueDate.$lte = normalizeDateRange(filters.to, 'end');
+    if (filters.from) match.revenueDate.$gte = toVietnamDateBoundary(filters.from, 'start');
+    if (filters.to) match.revenueDate.$lte = toVietnamDateBoundary(filters.to, 'end');
   }
 
   return match;
@@ -192,6 +179,7 @@ export const getRevenueDailyChart = async (userId, filters) => {
           $dateToString: {
             format: '%Y-%m-%d',
             date: '$revenueDate',
+            timezone: VIETNAM_TIMEZONE,
           },
         },
         totalCash: { $sum: '$cashAmount' },
