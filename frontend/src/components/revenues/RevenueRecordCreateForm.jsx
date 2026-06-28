@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Icon } from '../dashboard/DashboardIcons.jsx';
 import { FormError } from '../ui/FormError.jsx';
@@ -15,27 +15,64 @@ const FieldError = ({ message }) => (
   message ? <p className="mt-2 text-sm font-semibold text-red-600">{message}</p> : null
 );
 
-const MoneyInput = ({ id, label, register, error }) => (
-  <div>
-    <label htmlFor={id} className={labelBase}>{label}</label>
-    <div className="relative">
-      <input
-        id={id}
-        type="number"
-        min="0"
-        step="1000"
-        inputMode="numeric"
-        placeholder="0"
-        className={`${inputBase} pr-16`}
-        {...register(id)}
-      />
-      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
-        VND
-      </span>
+// Nhóm chữ số bằng dấu chấm: "3000000" -> "3.000.000"
+const groupThousands = (digits) => digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+// Nhãn rút gọn kiểu Việt: 3000000 -> "3tr", 1500000000 -> "1,5 tỷ", 500000 -> "500k"
+const shortMoney = (num) => {
+  if (!num) return '';
+  const trim = (value) => value.toLocaleString('vi-VN', { maximumFractionDigits: 1 });
+  if (num >= 1_000_000_000) return `${trim(num / 1_000_000_000)} tỷ`;
+  if (num >= 1_000_000) return `${trim(num / 1_000_000)}tr`;
+  if (num >= 1_000) return `${trim(num / 1_000)}k`;
+  return `${num}`;
+};
+
+const MoneyInput = ({ id, label, value, onChange, error }) => {
+  // Lưu/hiển thị thuần chữ số; định dạng chỉ ở phần nhìn để schema vẫn nhận số sạch.
+  const digits = value == null ? '' : String(value).replace(/\D/g, '');
+  const numeric = digits ? Number(digits) : 0;
+
+  const handleChange = (event) => {
+    onChange(event.target.value.replace(/\D/g, '').slice(0, 12));
+  };
+
+  return (
+    <div>
+      <label htmlFor={id} className={labelBase}>{label}</label>
+      <div className="relative">
+        <input
+          id={id}
+          type="text"
+          inputMode="numeric"
+          autoComplete="off"
+          placeholder="Nhập số tiền"
+          value={groupThousands(digits)}
+          onChange={handleChange}
+          className={`${inputBase} pr-16`}
+        />
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+          VND
+        </span>
+      </div>
+      {digits ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-base font-extrabold tracking-tight text-[#2D7A7F]">
+            {groupThousands(digits)} ₫
+          </span>
+          <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-bold text-[#2D7A7F]">
+            ≈ {shortMoney(numeric)}
+          </span>
+        </div>
+      ) : (
+        <p className="mt-2 text-xs font-medium text-slate-400">
+          Nhập số tiền — hệ thống tự hiển thị lại cho dễ kiểm tra.
+        </p>
+      )}
+      <FieldError message={error} />
     </div>
-    <FieldError message={error} />
-  </div>
-);
+  );
+};
 
 const DesktopInfoCards = () => {
   const cards = [
@@ -99,8 +136,8 @@ export const RevenueRecordCreateForm = ({
       return {
         businessId: initialValues.businessId || '',
         date: toDateInputValue(initialValues.date || initialValues.revenueDate || new Date()),
-        cashAmount: initialValues.cashAmount ?? 0,
-        bankAmount: initialValues.bankAmount ?? 0,
+        cashAmount: initialValues.cashAmount != null ? String(initialValues.cashAmount) : '',
+        bankAmount: initialValues.bankAmount != null ? String(initialValues.bankAmount) : '',
         content: initialValues.content || '',
         note: initialValues.note || '',
       };
@@ -109,8 +146,8 @@ export const RevenueRecordCreateForm = ({
     return {
       businessId: defaultBusinessId,
       date: toDateInputValue(new Date()),
-      cashAmount: 0,
-      bankAmount: 0,
+      cashAmount: '',
+      bankAmount: '',
       content: DEFAULT_CONTENT,
       note: '',
     };
@@ -118,6 +155,7 @@ export const RevenueRecordCreateForm = ({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm({
@@ -169,18 +207,32 @@ export const RevenueRecordCreateForm = ({
               <FieldError message={errors.date?.message} />
             </div>
 
-            <MoneyInput
-              id="cashAmount"
-              label="Tổng số tiền mặt nhận"
-              register={register}
-              error={errors.cashAmount?.message}
+            <Controller
+              control={control}
+              name="cashAmount"
+              render={({ field }) => (
+                <MoneyInput
+                  id="cashAmount"
+                  label="Tổng số tiền mặt nhận"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.cashAmount?.message}
+                />
+              )}
             />
 
-            <MoneyInput
-              id="bankAmount"
-              label="Tổng số tiền tài khoản nhận"
-              register={register}
-              error={errors.bankAmount?.message}
+            <Controller
+              control={control}
+              name="bankAmount"
+              render={({ field }) => (
+                <MoneyInput
+                  id="bankAmount"
+                  label="Tổng số tiền tài khoản nhận"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={errors.bankAmount?.message}
+                />
+              )}
             />
 
             <div className="lg:col-span-2">
