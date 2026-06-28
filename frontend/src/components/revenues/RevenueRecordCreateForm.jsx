@@ -28,7 +28,15 @@ const shortMoney = (num) => {
   return `${num}`;
 };
 
-const MoneyInput = ({ id, label, value, onChange, error }) => {
+const QUICK_ADDS = [
+  { label: '+100k', value: 100_000 },
+  { label: '+500k', value: 500_000 },
+  { label: '+1tr', value: 1_000_000 },
+];
+
+const MAX_MONEY = 999_999_999_999;
+
+const MoneyInput = ({ id, label, value, onChange, error, icon }) => {
   // Lưu/hiển thị thuần chữ số; định dạng chỉ ở phần nhìn để schema vẫn nhận số sạch.
   const digits = value == null ? '' : String(value).replace(/\D/g, '');
   const numeric = digits ? Number(digits) : 0;
@@ -37,10 +45,16 @@ const MoneyInput = ({ id, label, value, onChange, error }) => {
     onChange(event.target.value.replace(/\D/g, '').slice(0, 12));
   };
 
+  const addAmount = (amount) => onChange(String(Math.min(numeric + amount, MAX_MONEY)));
+  const clear = () => onChange('');
+
   return (
     <div>
       <label htmlFor={id} className={labelBase}>{label}</label>
       <div className="relative">
+        {icon ? (
+          <Icon name={icon} className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#2D7A7F]" />
+        ) : null}
         <input
           id={id}
           type="text"
@@ -49,12 +63,36 @@ const MoneyInput = ({ id, label, value, onChange, error }) => {
           placeholder="Nhập số tiền"
           value={groupThousands(digits)}
           onChange={handleChange}
-          className={`${inputBase} pr-16`}
+          className={`${inputBase} ${icon ? 'pl-12' : ''} ${digits ? 'pr-20' : 'pr-16'}`}
         />
+        {digits ? (
+          <button
+            type="button"
+            onClick={clear}
+            aria-label="Xóa số tiền"
+            className="absolute right-12 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-full bg-slate-200 text-slate-500 transition hover:bg-slate-300 hover:text-slate-700"
+          >
+            <Icon name="plus" className="h-3.5 w-3.5 rotate-45" />
+          </button>
+        ) : null}
         <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
           VND
         </span>
       </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
+        {QUICK_ADDS.map((preset) => (
+          <button
+            key={preset.label}
+            type="button"
+            onClick={() => addAmount(preset.value)}
+            className="rounded-full border border-teal-100 bg-teal-50 px-3 py-1 text-xs font-bold text-[#2D7A7F] transition hover:bg-teal-100 active:scale-95"
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
       {digits ? (
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="text-base font-extrabold tracking-tight text-[#2D7A7F]">
@@ -182,6 +220,7 @@ export const RevenueRecordCreateForm = ({
               <div className="relative">
                 <select
                   id="businessId"
+                  autoFocus
                   className={`${inputBase} appearance-none pr-10`}
                   disabled={isBusinessLoading || !businessOptions.length}
                   {...register('businessId')}
@@ -214,6 +253,7 @@ export const RevenueRecordCreateForm = ({
                 <MoneyInput
                   id="cashAmount"
                   label="Tổng số tiền mặt nhận"
+                  icon="wallet"
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.cashAmount?.message}
@@ -228,6 +268,7 @@ export const RevenueRecordCreateForm = ({
                 <MoneyInput
                   id="bankAmount"
                   label="Tổng số tiền tài khoản nhận"
+                  icon="bank"
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.bankAmount?.message}

@@ -14,7 +14,7 @@ export const AuthLayout = ({ title, subtitle, illustration, children, footer }) 
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-5 sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-6xl flex-col justify-between gap-8 lg:justify-center">
+      <div className="mx-auto flex min-h-[calc(100vh-2.5rem)] max-w-6xl flex-col justify-center gap-8">
         <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="hidden rounded-[32px] border border-white/70 bg-linear-to-br from-teal-100 via-white to-slate-100 p-8 shadow-sm lg:block">
             <div className="max-w-md">
@@ -46,26 +46,23 @@ export const AuthLayout = ({ title, subtitle, illustration, children, footer }) 
           </section>
 
           <section className="mx-auto w-full max-w-md">
-            <div className="mb-6 flex flex-col items-center text-center lg:hidden">
+            <div className="mb-7 flex flex-col items-center text-center lg:hidden">
               <AppMark />
-              <h1 className="mt-5 text-3xl font-semibold text-teal-800">Doanh Thu 360</h1>
-              <p className="mt-3 max-w-sm text-sm leading-6 text-slate-500">
-                Quản lý doanh thu và hỗ trợ khai báo thuế cho doanh nghiệp.
-              </p>
+              <h1 className="mt-4 text-2xl font-bold tracking-tight text-teal-800">Doanh Thu 360</h1>
             </div>
 
-            <div className="mb-5 text-center lg:text-left">
-              <h2 className="text-3xl font-semibold tracking-tight text-slate-800">{title}</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-500">{subtitle}</p>
+            <div className="mb-6 text-center lg:text-left">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">{subtitle}</p>
             </div>
 
             {children}
 
-            {footer ? <div className="mt-5">{footer}</div> : null}
+            {footer ? <div className="mt-6">{footer}</div> : null}
           </section>
         </div>
 
-        <footer className="flex flex-col gap-3 px-1 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="hidden flex-col gap-3 px-1 text-xs text-slate-500 sm:flex sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} Doanh Thu 360. Giải pháp quản lý thuế ổn định và minh bạch.</p>
           <div className="flex gap-4">
             <a href="/" className="hover:text-teal-700">Điều khoản sử dụng</a>

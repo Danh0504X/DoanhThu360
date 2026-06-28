@@ -72,13 +72,6 @@ export const LoginPage = () => {
       )}
     >
       <AuthCard>
-        <div className="mb-6 text-center">
-          <p className="text-xl font-semibold text-slate-800">Đăng nhập tài khoản</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Tiếp tục làm việc với dữ liệu doanh thu của bạn.
-          </p>
-        </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <FormError message={globalError} />
 

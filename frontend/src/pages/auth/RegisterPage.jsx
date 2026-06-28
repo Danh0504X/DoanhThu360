@@ -82,13 +82,6 @@ export const RegisterPage = () => {
       )}
     >
       <AuthCard>
-        <div className="mb-6 text-center">
-          <p className="text-xl font-semibold text-slate-800">Đăng ký tài khoản</p>
-          <p className="mt-2 text-sm text-slate-500">
-            Tạo tài khoản để lưu dữ liệu doanh thu và chuẩn bị báo cáo thuế.
-          </p>
-        </div>
-
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormError message={globalError} />
           <FormSuccess message={successMessage} />
