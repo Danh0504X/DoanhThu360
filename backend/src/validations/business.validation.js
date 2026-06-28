@@ -1,6 +1,5 @@
 import { buildValidationResult } from './common.validation.js';
 
-const BUSINESS_TYPES = ['retail', 'food_service', 'beauty_service', 'construction_materials', 'other'];
 const BUSINESS_STATUSES = ['active', 'inactive'];
 
 const hasOwn = (payload, key) => Object.prototype.hasOwnProperty.call(payload, key);
@@ -76,12 +75,6 @@ const parseBusinessPayload = (payload, { partial = false } = {}) => {
     }
   }
 
-  if (!partial || hasOwn(payload, 'businessType')) {
-    const result = parseOptionalEnum(payload.businessType, 'businessType', BUSINESS_TYPES);
-    if (result.message) return buildValidationResult(null, result.message);
-    if (result.value !== undefined) data.businessType = result.value;
-  }
-
   if (!partial || hasOwn(payload, 'status')) {
     const result = parseOptionalEnum(payload.status, 'status', BUSINESS_STATUSES);
     if (result.message) return buildValidationResult(null, result.message);
@@ -108,12 +101,6 @@ export const listBusinessesQuerySchema = (query) => {
     const result = parseOptionalEnum(query.status, 'status', BUSINESS_STATUSES);
     if (result.message) return buildValidationResult(null, result.message);
     if (result.value !== undefined) data.status = result.value;
-  }
-
-  if (hasOwn(query, 'type')) {
-    const result = parseOptionalEnum(query.type, 'type', BUSINESS_TYPES);
-    if (result.message) return buildValidationResult(null, result.message);
-    if (result.value !== undefined) data.type = result.value;
   }
 
   if (hasOwn(query, 'keyword')) {

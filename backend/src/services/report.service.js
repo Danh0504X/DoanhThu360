@@ -68,15 +68,23 @@ const buildRowDescription = (date, entryCount) => {
 };
 
 const mapRowsForTemplate = (rows = []) =>
-  rows.map((row, index) => ({
-    voucher_no: String(index + 1),
-    date: formatDate(`${row.date}T00:00:00.000Z`),
-    description: buildRowDescription(row.date, row.entryCount),
-    cash: formatCurrency(row.totalCash),
-    bank: formatCurrency(row.totalBank),
-    total: formatCurrency(row.totalRevenue),
-    note: row.notes?.join('; ') || '',
-  }));
+  rows.map((row, index) => {
+    const noteText = row.notes?.join('; ') || '';
+    // "Diễn giải" uses the note only when the day has a single record with a note.
+    // If several records fall on the same day (trùng) or there's no note,
+    // use the default description sentence instead.
+    const useNote = row.entryCount === 1 && Boolean(noteText);
+
+    return {
+      voucher_no: String(index + 1),
+      date: formatDate(`${row.date}T00:00:00.000Z`),
+      description: useNote ? noteText : buildRowDescription(row.date, row.entryCount),
+      cash: formatCurrency(row.totalCash),
+      bank: formatCurrency(row.totalBank),
+      total: formatCurrency(row.totalRevenue),
+      note: noteText,
+    };
+  });
 
 const buildTemplateData = ({ business, rows, from, to, sectionTitle }) => {
   const mappedRows = mapRowsForTemplate(rows);
@@ -134,7 +142,9 @@ const renderTemplate = async (data) => {
 };
 
 const parseDocumentXml = (xml) => {
-  const match = xml.match(/^(.*?<w:body>)([\s\S]*?)(<w:sectPr[\s\S]*?<\/w:sectPr>)<\/w:body><\/w:document>$/);
+  // Use [\s\S] (not `.`) so the prefix can span the newline that Word puts
+  // between the XML prolog and <w:document>; `.` would stop at that newline.
+  const match = xml.match(/^([\s\S]*?<w:body>)([\s\S]*?)(<w:sectPr[\s\S]*?<\/w:sectPr>)<\/w:body><\/w:document>\s*$/);
 
   if (!match) {
     throw createError('Không thể đọc nội dung template Word', 500);

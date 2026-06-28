@@ -7,8 +7,6 @@ const invalidateRevenueRelatedQueries = async (queryClient) => {
     queryClient.invalidateQueries({ queryKey: ['revenues'] }),
     queryClient.invalidateQueries({ queryKey: ['revenueSummary'] }),
     queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-    queryClient.invalidateQueries({ queryKey: ['reports'] }),
-    queryClient.invalidateQueries({ queryKey: ['taxReports'] }),
   ]);
 };
 

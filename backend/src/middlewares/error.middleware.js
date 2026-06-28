@@ -27,6 +27,14 @@ export const errorHandler = (error, req, res, next) => {
     message = `${field} already exists`;
   }
 
+  // Don't leak internal error details to clients on 5xx responses.
+  if (statusCode >= 500) {
+    console.error(error);
+    if (process.env.NODE_ENV === 'production') {
+      message = 'Internal server error';
+    }
+  }
+
   res.status(statusCode).json({
     success: false,
     message,

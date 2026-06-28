@@ -71,6 +71,9 @@ export const authStore = {
 
     setState({ token: accessToken || null, user: user || null });
   },
+  setToken(accessToken) {
+    setState({ token: accessToken || null });
+  },
   setUser(user) {
     if (user) {
       const storage = getStorage();

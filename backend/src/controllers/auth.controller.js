@@ -1,86 +1,100 @@
 import * as authService from '../services/auth.service.js';
-import { sendSuccess, sendError } from '../utils/response.js';
+import { sendSuccess } from '../utils/response.js';
+import { asyncHandler } from '../middlewares/asyncHandler.js';
+import { ApiError } from '../utils/ApiError.js';
 
-export const register = async (req, res, next) => {
-  try {
-    const { username, email, password, name } = req.body;
+// Extract request metadata (used for login history / refresh-token records).
+const getRequestMeta = (req) => ({
+  userAgent: req.headers['user-agent'] || null,
+  ipAddress: req.ip || req.socket?.remoteAddress || null,
+});
 
-    if (!username || typeof username !== 'string' || username.trim().length < 3) {
-      return sendError(res, 'Username must be at least 3 characters', 400);
-    }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return sendError(res, 'Invalid email format', 400);
-    }
-    if (!password || password.length < 6) {
-      return sendError(res, 'Password must be at least 6 characters', 400);
-    }
+export const register = asyncHandler(async (req, res) => {
+  const { username, email, password, name } = req.body;
 
-    const result = await authService.registerUser({ username: username.trim(), email, password, name });
-    return sendSuccess(res, 'Registration successful', result, 201);
-  } catch (err) {
-    next(err);
+  if (!username || typeof username !== 'string' || username.trim().length < 3) {
+    throw ApiError.badRequest('Username must be at least 3 characters');
   }
-};
-
-export const login = async (req, res, next) => {
-  try {
-    const { identifier, password } = req.body;
-
-    if (!identifier || !password) {
-      return sendError(res, 'Identifier (username or email) and password are required', 400);
-    }
-
-    const result = await authService.loginUser({ identifier, password });
-    return sendSuccess(res, 'Login successful', result);
-  } catch (err) {
-    next(err);
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw ApiError.badRequest('Invalid email format');
   }
-};
-
-export const loginWithGoogle = async (req, res, next) => {
-  try {
-    const { idToken } = req.body;
-
-    if (!idToken) {
-      return sendError(res, 'Google ID token is required', 400);
-    }
-
-    const result = await authService.loginWithGoogle(idToken);
-    return sendSuccess(res, 'Google login successful', result);
-  } catch (err) {
-    next(err);
+  if (!password || password.length < 6) {
+    throw ApiError.badRequest('Password must be at least 6 characters');
   }
-};
 
-export const refreshToken = async (req, res, next) => {
-  try {
-    const { refreshToken: token } = req.body;
+  const result = await authService.registerUser({ username: username.trim(), email, password, name });
+  return sendSuccess(res, 'Registration successful', result, 201);
+});
 
-    if (!token) {
-      return sendError(res, 'Refresh token is required', 400);
-    }
+export const login = asyncHandler(async (req, res) => {
+  const { identifier, password } = req.body;
 
-    const result = await authService.refreshAccessToken(token);
-    return sendSuccess(res, 'Token refreshed', result);
-  } catch (err) {
-    next(err);
+  if (!identifier || !password) {
+    throw ApiError.badRequest('Identifier (username or email) and password are required');
   }
-};
 
-export const getMe = async (req, res, next) => {
-  try {
-    const result = await authService.getMe(req.user.sub);
-    return sendSuccess(res, 'Current user', result);
-  } catch (err) {
-    next(err);
-  }
-};
+  const result = await authService.loginUser({ identifier, password }, getRequestMeta(req));
+  return sendSuccess(res, 'Login successful', result);
+});
 
-export const logout = async (req, res, next) => {
-  try {
-    // For stateless JWTs, we just send success. If we maintained a blacklist, we'd add it here.
-    return sendSuccess(res, 'Logged out successfully', null);
-  } catch (err) {
-    next(err);
+export const loginWithGoogle = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    throw ApiError.badRequest('Google ID token is required');
   }
-};
+
+  const result = await authService.loginWithGoogle(idToken, getRequestMeta(req));
+  return sendSuccess(res, 'Google login successful', result);
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw ApiError.badRequest('A valid email is required');
+  }
+
+  const result = await authService.requestPasswordReset({ email });
+  return sendSuccess(res, result.message, null);
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, code, newPassword } = req.body;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw ApiError.badRequest('A valid email is required');
+  }
+  if (!code || !/^\d{6}$/.test(String(code))) {
+    throw ApiError.badRequest('A valid 6-digit code is required');
+  }
+  if (!newPassword || newPassword.length < 6) {
+    throw ApiError.badRequest('New password must be at least 6 characters');
+  }
+
+  const result = await authService.resetPassword({ email, code, newPassword });
+  return sendSuccess(res, result.message, null);
+});
+
+export const refreshToken = asyncHandler(async (req, res) => {
+  const { refreshToken: token } = req.body;
+
+  if (!token) {
+    throw ApiError.badRequest('Refresh token is required');
+  }
+
+  const result = await authService.refreshAccessToken(token);
+  return sendSuccess(res, 'Token refreshed', result);
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  const result = await authService.getMe(req.user.sub);
+  return sendSuccess(res, 'Current user', result);
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  // Revoke the presented refresh token so it can no longer be used.
+  const { refreshToken: token } = req.body || {};
+  await authService.logoutUser(req.user.sub, token);
+  return sendSuccess(res, 'Logged out successfully', null);
+});

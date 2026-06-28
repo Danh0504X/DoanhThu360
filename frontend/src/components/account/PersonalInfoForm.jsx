@@ -1,10 +1,18 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Icon } from '../dashboard/DashboardIcons.jsx';
 import { profileSchema } from '../../schemas/accountSchema.js';
 import { toDateInputValue } from '../../utils/formatDate.js';
-import { Button } from '../ui/Button.jsx';
-import { TextInput } from '../ui/TextInput.jsx';
+
+const inputClass =
+  'h-12 w-full rounded-md border border-slate-100 bg-slate-100 px-4 text-sm font-semibold text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-[#2D7A7F] focus:bg-white focus:ring-2 focus:ring-teal-50';
+
+const labelClass = 'mb-2 block text-xs font-bold uppercase text-slate-600';
+
+const FieldError = ({ message }) => (
+  message ? <p className="mt-2 text-sm font-semibold text-red-600">{message}</p> : null
+);
 
 export const PersonalInfoForm = ({
   profile,
@@ -28,65 +36,66 @@ export const PersonalInfoForm = ({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
-            <path d="M4 20a8 8 0 0 1 16 0" />
-          </svg>
+    <form onSubmit={handleSubmit(onSubmit)} className="rounded-lg border border-slate-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-slate-200 px-5 py-5">
+        <div className="grid h-10 w-10 place-items-center rounded-md bg-teal-50 text-[#2D7A7F]">
+          <Icon name="user" className="h-5 w-5" />
         </div>
-        <h2 className="text-xl font-semibold text-slate-800">Thông tin cá nhân</h2>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <TextInput
-          id="fullName"
-          label="Họ tên"
-          {...register('fullName')}
-          error={errors.fullName?.message}
-        />
-        <TextInput
-          id="phone"
-          label="Số điện thoại"
-          {...register('phone')}
-          error={errors.phone?.message}
-        />
-      </div>
-
-      <div className="mt-4">
-        <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
-          Email
-        </label>
-        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 md:flex-row md:items-center md:justify-between">
-          <input
-            id="email"
-            readOnly
-            {...register('email')}
-            className="w-full bg-transparent text-slate-700 outline-none"
-          />
-          {profile?.emailVerified ? (
-            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-600">
-              Đã xác minh
-            </span>
-          ) : null}
+        <div>
+          <h2 className="text-xl font-bold text-slate-900">Thông tin cá nhân</h2>
+          <p className="mt-1 text-sm font-medium text-slate-500">Cập nhật hồ sơ quản trị tài khoản.</p>
         </div>
-        {errors.email ? <p className="mt-2 text-sm text-red-600">{errors.email.message}</p> : null}
       </div>
 
-      <div className="mt-4">
-        <TextInput
-          id="birthDate"
-          type="date"
-          label="Ngày sinh"
-          {...register('birthDate')}
-          error={errors.birthDate?.message}
-        />
+      <div className="space-y-5 px-5 py-6">
+        <div className="grid gap-5 md:grid-cols-2">
+          <div>
+            <label htmlFor="fullName" className={labelClass}>Họ tên</label>
+            <input id="fullName" className={inputClass} {...register('fullName')} />
+            <FieldError message={errors.fullName?.message} />
+          </div>
+          <div>
+            <label htmlFor="phone" className={labelClass}>Số điện thoại</label>
+            <input id="phone" className={inputClass} {...register('phone')} />
+            <FieldError message={errors.phone?.message} />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="email" className={labelClass}>Email</label>
+          <div className="flex flex-col gap-3 rounded-md border border-slate-100 bg-slate-100 px-4 py-3 md:flex-row md:items-center md:justify-between">
+            <input
+              id="email"
+              readOnly
+              {...register('email')}
+              className="w-full bg-transparent text-sm font-semibold text-slate-700 outline-none"
+            />
+            {profile?.emailVerified ? (
+              <span className="inline-flex rounded-md border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                Đã xác minh
+              </span>
+            ) : null}
+          </div>
+          <FieldError message={errors.email?.message} />
+        </div>
+
+        <div>
+          <label htmlFor="birthDate" className={labelClass}>Ngày sinh</label>
+          <input id="birthDate" type="date" className={inputClass} {...register('birthDate')} />
+          <FieldError message={errors.birthDate?.message} />
+        </div>
       </div>
 
-      <Button type="submit" className="mt-6" isLoading={isSubmitting}>
-        Cập nhật thông tin
-      </Button>
+      <div className="border-t border-slate-200 bg-slate-50 px-5 py-5">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-[#2D7A7F] px-6 text-sm font-bold text-white transition hover:bg-[#25696d] disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" /> : null}
+          Cập nhật thông tin
+        </button>
+      </div>
     </form>
   );
 };

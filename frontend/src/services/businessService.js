@@ -5,7 +5,6 @@ const BUSINESSES_URL = '/businesses';
 const normalizeBusinessPayload = (data = {}) => ({
   businessName: data.name,
   taxCode: data.taxCode,
-  businessType: data.businessType,
   address: data.address,
   phone: data.phone || undefined,
   email: data.email || undefined,
@@ -18,7 +17,6 @@ const normalizeBusinessParams = (params = {}) =>
     Object.entries({
       keyword: params.keyword || undefined,
       status: params.status && params.status !== 'all' ? params.status : undefined,
-      type: params.type && params.type !== 'all' ? params.type : undefined,
       page: params.page || 1,
       limit: params.limit || 10,
     }).filter(([, value]) => value !== undefined && value !== ''),

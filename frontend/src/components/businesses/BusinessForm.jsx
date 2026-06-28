@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { businessSchema, BUSINESS_TYPE_OPTIONS } from '../../schemas/businessSchema.js';
+import { businessSchema } from '../../schemas/businessSchema.js';
 import { Button } from '../ui/Button.jsx';
 import { FormError } from '../ui/FormError.jsx';
 import { TextInput } from '../ui/TextInput.jsx';
@@ -17,7 +17,7 @@ export const BusinessForm = ({
   const initialValues = useMemo(() => ({
     name: defaultValues?.name || defaultValues?.businessName || '',
     taxCode: defaultValues?.taxCode || '',
-    businessType: defaultValues?.businessType || 'retail',
+
     address: defaultValues?.address || '',
     phone: defaultValues?.phone || '',
     email: defaultValues?.email || '',
@@ -55,21 +55,7 @@ export const BusinessForm = ({
             error={errors.taxCode?.message}
           />
 
-          <div>
-            <label htmlFor="businessType" className="mb-2 block text-sm font-medium text-slate-700">
-              Loại hình kinh doanh
-            </label>
-            <select
-              id="businessType"
-              {...register('businessType')}
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-800 outline-none transition-colors focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-            >
-              {BUSINESS_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            {errors.businessType ? <p className="mt-2 text-sm text-red-600">{errors.businessType.message}</p> : null}
-          </div>
+
 
           <div>
             <label htmlFor="status" className="mb-2 block text-sm font-medium text-slate-700">

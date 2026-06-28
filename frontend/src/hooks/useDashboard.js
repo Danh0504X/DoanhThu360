@@ -39,6 +39,7 @@ export const useRecentRevenues = (params = {}) =>
         cashAmount: item.cashAmount,
         bankAmount: item.bankAmount,
         totalAmount: item.totalAmount,
+        note: item.note,
       })),
       pagination: response?.pagination || null,
     }),

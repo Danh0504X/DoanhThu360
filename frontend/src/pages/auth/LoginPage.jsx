@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import heroImage from '../../assets/hero.png';
 import { AuthCard } from '../../components/auth/AuthCard.jsx';
 import { AuthLayout } from '../../components/auth/AuthLayout.jsx';
+import { GoogleLoginButton } from '../../components/auth/GoogleLoginButton.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
@@ -13,7 +14,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { loginSchema } from '../../schemas/login.schema.js';
 
 export const LoginPage = () => {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [globalError, setGlobalError] = useState('');
@@ -46,8 +47,14 @@ export const LoginPage = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    setGlobalError('Đăng nhập Google cần hoàn thiện thêm ở backend để nhận idToken.');
+  const handleGoogleCredential = async (idToken) => {
+    try {
+      setGlobalError('');
+      await googleLogin(idToken);
+      navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
+    } catch (error) {
+      setGlobalError(error.message || 'Đăng nhập Google thất bại. Vui lòng thử lại.');
+    }
   };
 
   return (
@@ -109,19 +116,18 @@ export const LoginPage = () => {
             </Link>
           </div>
 
-          <div className="space-y-3 pt-1">
+          <div className="space-y-4 pt-1">
             <Button type="submit" fullWidth size="lg" isLoading={isSubmitting}>
               Đăng nhập
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              size="lg"
-              onClick={handleGoogleLogin}
-            >
-              Tiếp tục với Google
-            </Button>
+
+            <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
+              <span className="h-px flex-1 bg-slate-200" />
+              hoặc
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
+
+            <GoogleLoginButton onCredential={handleGoogleCredential} onError={setGlobalError} />
           </div>
         </form>
       </AuthCard>

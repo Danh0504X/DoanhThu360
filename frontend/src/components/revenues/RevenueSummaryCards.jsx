@@ -11,7 +11,7 @@ export const RevenueSummaryCards = ({ summary }) => (
     {cards.map((card) => (
       <article
         key={card.key}
-        className={`rounded-[24px] border p-5 shadow-sm ${
+        className={`rounded-lg border p-5 shadow-sm ${
           card.featured
             ? 'border-teal-700 bg-teal-700 text-white'
             : 'border-slate-200 bg-white text-slate-800'

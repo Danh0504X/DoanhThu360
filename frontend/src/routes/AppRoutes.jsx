@@ -4,6 +4,9 @@ import { RegisterPage } from '../pages/auth/RegisterPage.jsx';
 import { ForgotPasswordPage } from '../pages/auth/ForgotPasswordPage.jsx';
 import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage.jsx';
 import { AccountSettingsPage } from '../pages/account/AccountSettingsPage.jsx';
+import { ChangePasswordPage } from '../pages/account/ChangePasswordPage.jsx';
+import { VerifyEmailPage } from '../pages/account/VerifyEmailPage.jsx';
+import { AnalyticsPage } from '../pages/analytics/AnalyticsPage.jsx';
 import { BusinessCreatePage } from '../pages/businesses/BusinessCreatePage.jsx';
 import { BusinessEditPage } from '../pages/businesses/BusinessEditPage.jsx';
 import { BusinessListPage } from '../pages/businesses/BusinessListPage.jsx';
@@ -111,6 +114,30 @@ export const AppRoutes = () => (
       element={(
         <ProtectedRoute>
           <AccountSettingsPage />
+        </ProtectedRoute>
+      )}
+    />
+    <Route
+      path="/account/change-password"
+      element={(
+        <ProtectedRoute>
+          <ChangePasswordPage />
+        </ProtectedRoute>
+      )}
+    />
+    <Route
+      path="/account/verify-email"
+      element={(
+        <ProtectedRoute>
+          <VerifyEmailPage />
+        </ProtectedRoute>
+      )}
+    />
+    <Route
+      path="/analytics"
+      element={(
+        <ProtectedRoute>
+          <AnalyticsPage />
         </ProtectedRoute>
       )}
     />

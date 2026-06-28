@@ -1,65 +1,78 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { Icon } from './DashboardIcons.jsx';
+import { DesktopMoreMenu } from './MoreMenu.jsx';
 
 const navItems = [
-  { id: 'overview', label: 'Tổng quan', to: '/dashboard' },
-  { id: 'revenue', label: 'Doanh thu', to: '/revenues' },
-  { id: 'business', label: 'Hộ kinh doanh', to: '/businesses' },
-  { id: 'reports', label: 'Báo cáo' },
-  { id: 'account', label: 'Tài khoản', to: '/account' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', supported: true },
+  { id: 'cash-flow', label: 'Cash Flow', icon: 'cash', supported: true, to: '/revenues' },
+  { id: 'analytics', label: 'Analytics', icon: 'analytics', supported: true, to: '/analytics' },
+  { id: 'more', label: 'More', icon: 'menu' },
 ];
 
-export const Sidebar = ({ onLogout, activeItem = 'overview' }) => (
-  <aside className="hidden w-72 shrink-0 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm lg:flex lg:flex-col">
-    <div className="flex items-center gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-700 text-white">
-        <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <path d="M4 9.5 12 5l8 4.5" />
-          <path d="M6 10.5V19h12v-8.5" />
-          <path d="M9 12h6" />
-          <path d="M9 15h6" />
-        </svg>
+export const Sidebar = ({ activeItem = 'dashboard', onNavigate, onExport }) => {
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+
+  return (
+    <aside className="fixed inset-y-0 left-0 z-20 hidden w-[292px] border-r border-slate-200 bg-white lg:flex lg:flex-col">
+      <div className="border-b border-slate-200 px-7 py-6">
+        <h1 className="text-2xl font-bold tracking-normal text-teal-800">Doanh Thu 360</h1>
+        <p className="mt-1 text-xs font-medium text-slate-500">Revenue Management</p>
       </div>
-      <div>
-        <p className="text-lg font-semibold text-teal-800">Doanh Thu 360</p>
-        <p className="text-sm text-slate-500">Quản lý doanh thu</p>
+
+      <nav className="flex-1 px-4 py-8">
+        <div className="space-y-2">
+          {navItems.map((item) => {
+            const isActive = activeItem === item.id;
+
+            if (item.id === 'more') {
+              return (
+                <div key={item.id} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsMoreOpen(!isMoreOpen)}
+                    className={`flex w-full items-center gap-4 rounded-none px-5 py-4 text-left text-sm font-semibold transition ${
+                      isActive || isMoreOpen
+                        ? 'bg-[#d7e2ff] text-slate-800'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-teal-800'
+                    }`}
+                  >
+                    <Icon name={item.icon} className={`h-5 w-5 ${isActive || isMoreOpen ? 'text-teal-800' : 'text-slate-500'}`} />
+                    <span>{item.label}</span>
+                  </button>
+                  <DesktopMoreMenu isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
+                </div>
+              );
+            }
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => onNavigate(item)}
+                className={`flex w-full items-center gap-4 rounded-none px-5 py-4 text-left text-sm font-semibold transition ${
+                  isActive
+                    ? 'bg-[#d7e2ff] text-slate-800'
+                    : 'text-slate-600 hover:bg-slate-50 hover:text-teal-800'
+                }`}
+              >
+                <Icon name={item.icon} className={`h-5 w-5 ${isActive ? 'text-teal-800' : 'text-slate-500'}`} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
       </div>
-    </div>
-
-    <nav className="mt-8 space-y-2">
-      {navItems.map((item) => {
-        const isActive = activeItem === item.id;
-        const className = `flex w-full items-center rounded-2xl px-4 py-3 text-left text-sm font-medium ${
-          isActive
-            ? 'bg-teal-50 text-teal-800'
-            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
-        }`;
-
-        if (item.to) {
-          return (
-            <NavLink key={item.id} to={item.to} className={className}>
-              {item.label}
-            </NavLink>
-          );
-        }
-
-        return (
-          <button key={item.id} type="button" className={className}>
-            {item.label}
-          </button>
-        );
-      })}
     </nav>
 
-    <div className="mt-auto rounded-3xl bg-slate-50 p-4">
-      <p className="text-sm font-medium text-slate-700">Đăng xuất phiên hiện tại</p>
-      <p className="mt-1 text-xs leading-5 text-slate-500">Kết thúc làm việc an toàn sau khi kiểm tra số liệu.</p>
+    <div className="px-5 py-7">
       <button
         type="button"
-        onClick={onLogout}
-        className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+        onClick={onExport}
+        className="flex w-full items-center justify-center gap-3 bg-teal-700 px-5 py-4 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
       >
-        Đăng xuất
+        <Icon name="download" className="h-5 w-5" />
+        Export Report
       </button>
     </div>
-  </aside>
-);
+    </aside>
+  );
+};

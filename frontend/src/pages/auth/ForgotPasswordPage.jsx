@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import heroImage from '../../assets/hero.png';
 import { AuthCard } from '../../components/auth/AuthCard.jsx';
 import { AuthLayout } from '../../components/auth/AuthLayout.jsx';
@@ -13,6 +13,7 @@ import { useForgotPassword } from '../../hooks/useAuth.js';
 import { forgotPasswordSchema } from '../../schemas/forgotPassword.schema.js';
 
 export const ForgotPasswordPage = () => {
+  const navigate = useNavigate();
   const [globalError, setGlobalError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const forgotPasswordMutation = useForgotPassword();
@@ -33,7 +34,11 @@ export const ForgotPasswordPage = () => {
       setGlobalError('');
       setSuccessMessage('');
       await forgotPasswordMutation.mutateAsync({ email: formValues.email });
-      setSuccessMessage('Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.');
+      setSuccessMessage('Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi mã đặt lại mật khẩu. Đang chuyển đến bước nhập mã...');
+      // Move the user to the reset step with their email prefilled.
+      setTimeout(() => {
+        navigate(`/reset-password?email=${encodeURIComponent(formValues.email)}`);
+      }, 1200);
     } catch (error) {
       setGlobalError(error.message || 'Không thể gửi yêu cầu. Vui lòng thử lại.');
     }

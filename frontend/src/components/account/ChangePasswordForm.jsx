@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { changePasswordSchema } from '../../schemas/accountSchema.js';
-import { Button } from '../ui/Button.jsx';
 import { PasswordInput } from '../ui/PasswordInput.jsx';
 
 export const ChangePasswordForm = ({ isSubmitting, onSubmit }) => {
@@ -24,8 +23,8 @@ export const ChangePasswordForm = ({ isSubmitting, onSubmit }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="rounded-2xl border border-slate-200 bg-white p-4">
-      <h4 className="text-base font-semibold text-slate-800">Thay đổi mật khẩu</h4>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="rounded-md border border-slate-200 bg-white p-4">
+      <h4 className="text-base font-bold text-slate-900">Thay đổi mật khẩu</h4>
       <div className="mt-4 space-y-4">
         <PasswordInput
           id="currentPassword"
@@ -47,11 +46,13 @@ export const ChangePasswordForm = ({ isSubmitting, onSubmit }) => {
         />
       </div>
 
-      <Button type="submit" variant="secondary" fullWidth className="mt-5" isLoading={isSubmitting}>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#2D7A7F] text-sm font-bold text-white transition hover:bg-[#25696d] disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {isSubmitting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-r-transparent" /> : null}
         Đổi mật khẩu
-      </Button>
-      <button type="button" className="mt-3 w-full text-center text-xs text-slate-400 transition hover:text-slate-600">
-        Quên mật khẩu?
       </button>
     </form>
   );

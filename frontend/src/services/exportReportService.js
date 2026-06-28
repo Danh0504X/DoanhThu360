@@ -1,5 +1,4 @@
-import { rawApi } from '../lib/api.js';
-import { authStore } from '../stores/authStore.js';
+import { api } from '../lib/api.js';
 
 const REPORTS_URL = '/reports';
 
@@ -29,12 +28,10 @@ const parseBlobError = async (error) => {
 export const exportReportService = {
   async exportRevenueWord(params) {
     try {
-      const response = await rawApi.get(`${REPORTS_URL}/revenue-word`, {
+      // Goes through `api`, so the access token is attached and 401s trigger a refresh + retry.
+      const response = await api.get(`${REPORTS_URL}/revenue-word`, {
         params,
         responseType: 'blob',
-        headers: {
-          Authorization: `Bearer ${authStore.getToken()}`,
-        },
       });
 
       return {
@@ -44,11 +41,6 @@ export const exportReportService = {
     } catch (error) {
       const normalizedError = new Error(await parseBlobError(error));
       normalizedError.status = error.response?.status;
-
-      if (normalizedError.status === 401) {
-        authStore.clearSession();
-      }
-
       throw normalizedError;
     }
   },

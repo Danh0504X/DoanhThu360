@@ -1,16 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CashFlowCard } from '../../components/dashboard/CashFlowCard.jsx';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
-import { PaymentSplitCard } from '../../components/dashboard/PaymentSplitCard.jsx';
-import { RecentRevenueTable } from '../../components/dashboard/RecentRevenueTable.jsx';
-import { RevenueChart } from '../../components/dashboard/RevenueChart.jsx';
+import { MobileDashboard } from '../../components/dashboard/MobileDashboard.jsx';
+import { QuickStatsCard } from '../../components/dashboard/QuickStatsCard.jsx';
+import { RecentActivitiesTable } from '../../components/dashboard/RecentActivitiesTable.jsx';
+import { SummaryRevenueCard } from '../../components/dashboard/SummaryRevenueCard.jsx';
 import { RevenueWordExportDialog } from '../../components/reports/RevenueWordExportDialog.jsx';
-import { StatCard } from '../../components/dashboard/StatCard.jsx';
-import { Button } from '../../components/ui/Button.jsx';
-import { FormError } from '../../components/ui/FormError.jsx';
+import { RevenueDeleteDialog } from '../../components/revenues/RevenueDeleteDialog.jsx';
+import { RevenueDetailModal } from '../../components/revenues/RevenueDetailModal.jsx';
 import { useToast } from '../../components/ui/useToast.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
+import { useDeleteRevenue } from '../../hooks/useRevenues.js';
 import {
   useDashboardStats,
   useRecentRevenues,
@@ -18,6 +20,7 @@ import {
 } from '../../hooks/useDashboard.js';
 import { useExportRevenueWord } from '../../hooks/useExportRevenueWord.js';
 import { downloadBlob } from '../../utils/downloadBlob.js';
+import { getVietnamPreviousPeriodRange } from '../../utils/timezone.js';
 
 const periodOptions = [
   { id: 'day', label: 'Ngày' },
@@ -25,90 +28,161 @@ const periodOptions = [
   { id: 'year', label: 'Năm' },
 ];
 
-const titlesByPeriod = {
-  day: 'Tổng doanh thu hôm nay',
-  month: 'Tổng doanh thu tháng này',
-  year: 'Tổng doanh thu năm nay',
+// Noun form used in headings, e.g. "Tổng doanh thu tháng này".
+const periodNouns = {
+  day: 'hôm nay',
+  month: 'tháng này',
+  year: 'năm nay',
 };
 
+// Previous-period noun used in the trend caption ("so với tháng trước").
+const previousPeriodNouns = {
+  day: 'hôm qua',
+  month: 'tháng trước',
+  year: 'năm trước',
+};
+
+// Compute the revenue trend vs the previous period.
+// `hasBaseline` is false when there's no previous data to compare against.
+const getRevenueTrend = (current, previous) => {
+  const cur = Number(current || 0);
+  const prev = Number(previous || 0);
+
+  if (prev <= 0) {
+    return { hasBaseline: false, isUp: cur > 0, percent: 0 };
+  }
+
+  const percent = ((cur - prev) / prev) * 100;
+  return { hasBaseline: true, isUp: percent >= 0, percent };
+};
+
+const unsupportedMessage = 'Chức năng này chưa được backend hỗ trợ.';
+
+const buildCashTransactions = (rows = []) =>
+  rows
+    .filter((row) => Number(row.cashAmount || 0) !== 0)
+    .map((row) => ({
+      id: `${row.id}-cash`,
+      content: row.content,
+      amount: Number(row.cashAmount || 0),
+    }));
+
+const buildBankTransactions = (rows = []) =>
+  rows
+    .filter((row) => Number(row.bankAmount || 0) !== 0)
+    .map((row) => ({
+      id: `${row.id}-bank`,
+      content: row.content,
+      amount: Number(row.bankAmount || 0),
+    }));
+
 export const DashboardPage = () => {
-  const [selectedBusiness, setSelectedBusiness] = useState('all');
-  const [selectedPeriod, setSelectedPeriod] = useState(periodOptions[0].id);
+  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [keyword, setKeyword] = useState('');
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
-  const { user, logout } = useAuth();
-  const toast = useToast();
+  const [detailRevenue, setDetailRevenue] = useState(null);
+  const [selectedRevenue, setSelectedRevenue] = useState(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
+  const deleteRevenueMutation = useDeleteRevenue();
 
   const dashboardParams = useMemo(
     () => ({
       period: selectedPeriod,
-      ...(selectedBusiness !== 'all' ? { businessId: selectedBusiness } : {}),
+      ...(keyword.trim() ? { keyword: keyword.trim() } : {}),
     }),
-    [selectedBusiness, selectedPeriod],
+    [keyword, selectedPeriod],
   );
 
-  const userName = useMemo(() => user?.name || user?.username || 'Minh', [user]);
+  // Same filters but pointed at the previous period, to compute the trend.
+  const previousPeriodParams = useMemo(
+    () => ({
+      ...getVietnamPreviousPeriodRange(selectedPeriod),
+      ...(keyword.trim() ? { keyword: keyword.trim() } : {}),
+    }),
+    [keyword, selectedPeriod],
+  );
 
+  const userName = user?.name || user?.fullName || user?.username || 'Người dùng';
   const businessesQuery = useBusinesses({ status: 'active' });
   const statsQuery = useDashboardStats(dashboardParams);
+  const previousStatsQuery = useDashboardStats(previousPeriodParams);
   const chartQuery = useRevenueChart(dashboardParams);
   const recentRevenuesQuery = useRecentRevenues(dashboardParams);
   const exportRevenueWordMutation = useExportRevenueWord();
 
-  const businessOptions = useMemo(() => {
-    const businesses = businessesQuery.data?.rows || [];
-
-    return [
-      { id: 'all', name: 'Tất cả hộ kinh doanh' },
-      ...businesses.map((business) => ({
-        id: business._id,
-        name: business.businessName,
-      })),
-    ];
-  }, [businessesQuery.data]);
-
-  const featuredStat = useMemo(() => {
-    const summary = statsQuery.data || {
-      totalRevenue: 0,
-      totalCash: 0,
-      totalBank: 0,
-      count: 0,
-    };
-
-    return {
-      title: titlesByPeriod[selectedPeriod],
-      value: summary.totalRevenue,
-      change: `${summary.count} bản ghi doanh thu`,
-      badgeLabel: periodOptions.find((item) => item.id === selectedPeriod)?.label || 'Ngày',
-    };
-  }, [selectedPeriod, statsQuery.data]);
-
-  const paymentSplitData = useMemo(() => {
-    const summary = statsQuery.data || {
-      totalCash: 0,
-      totalBank: 0,
-    };
-
-    return [
-      { name: 'Tiền mặt', value: summary.totalCash, color: '#0f766e' },
-      { name: 'Chuyển khoản', value: summary.totalBank, color: '#99f6e4' },
-    ];
-  }, [statsQuery.data]);
-
-  const hasAnyDashboardData = Boolean(
-    statsQuery.data?.count || chartQuery.data?.length || recentRevenuesQuery.data?.rows?.length,
+  const businesses = useMemo(() => businessesQuery.data?.rows || [], [businessesQuery.data]);
+  const exportBusiness = businesses[0] || null;
+  const stats = statsQuery.data || {
+    totalCash: 0,
+    totalBank: 0,
+    totalRevenue: 0,
+    count: 0,
+  };
+  const recentRows = useMemo(
+    () => recentRevenuesQuery.data?.rows || [],
+    [recentRevenuesQuery.data],
   );
+  const isLoading = statsQuery.isLoading || chartQuery.isLoading || recentRevenuesQuery.isLoading;
+  const errorMessage =
+    statsQuery.error?.message || chartQuery.error?.message || recentRevenuesQuery.error?.message || '';
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
+  const cashTransactions = useMemo(() => buildCashTransactions(recentRows), [recentRows]);
+  const bankTransactions = useMemo(() => buildBankTransactions(recentRows), [recentRows]);
+
+  const revenueTrend = useMemo(
+    () => getRevenueTrend(stats.totalRevenue, previousStatsQuery.data?.totalRevenue),
+    [stats.totalRevenue, previousStatsQuery.data],
+  );
+  const isTrendLoading = statsQuery.isLoading || previousStatsQuery.isLoading;
+
+  const handleUnsupportedAction = () => {
+    toast.info(unsupportedMessage);
   };
 
-  const selectedBusinessItem = businessOptions.find((item) => item.id === selectedBusiness);
+  const handleDeleteConfirm = async () => {
+    if (!selectedRevenue) return;
+
+    try {
+      setDeleteErrorMessage('');
+      await deleteRevenueMutation.mutateAsync(selectedRevenue.id || selectedRevenue._id);
+      toast.success('Xóa doanh thu thành công.');
+      setSelectedRevenue(null);
+    } catch (error) {
+      setDeleteErrorMessage(error.message || 'Không thể xóa bản ghi doanh thu.');
+    }
+  };
+
+  const handleDeleteFromDetail = (row) => {
+    setDetailRevenue(null);
+    setDeleteErrorMessage('');
+    setSelectedRevenue(row);
+  };
+
+  const handleNavigate = (item) => {
+    if (item.id === 'dashboard') {
+      navigate('/dashboard');
+      return;
+    }
+
+    if (item.id === 'cash-flow') {
+      navigate('/revenues');
+      return;
+    }
+
+    if (item.to) {
+      navigate(item.to);
+      return;
+    }
+
+    handleUnsupportedAction();
+  };
 
   const handleOpenExportDialog = () => {
-    if (selectedBusiness === 'all') {
-      toast.error('Vui lòng chọn một hộ kinh doanh để xuất Word');
+    if (!exportBusiness?._id) {
+      toast.info(unsupportedMessage);
       return;
     }
 
@@ -116,9 +190,14 @@ export const DashboardPage = () => {
   };
 
   const handleExportRevenueWord = async ({ periodType, value }) => {
+    if (!exportBusiness?._id) {
+      toast.info(unsupportedMessage);
+      return;
+    }
+
     try {
       const result = await exportRevenueWordMutation.mutateAsync({
-        businessId: selectedBusiness,
+        businessId: exportBusiness._id,
         periodType,
         value,
       });
@@ -134,88 +213,132 @@ export const DashboardPage = () => {
     }
   };
 
-  const isLoading = statsQuery.isLoading || chartQuery.isLoading || recentRevenuesQuery.isLoading;
-  const errorMessage =
-    statsQuery.error?.message || chartQuery.error?.message || recentRevenuesQuery.error?.message;
-
   return (
-    <DashboardLayout
-      userName={userName}
-      businessOptions={businessOptions}
-      selectedBusiness={selectedBusiness}
-      onBusinessChange={setSelectedBusiness}
-      onLogout={handleLogout}
-      activeNav="overview"
-    >
-      <section className="space-y-4">
-        <div className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1 sm:inline-grid sm:min-w-80">
+    <>
+      <MobileDashboard
+        userName={userName}
+        selectedPeriod={selectedPeriod}
+        periodLabel={periodNouns[selectedPeriod]}
+        previousPeriodLabel={previousPeriodNouns[selectedPeriod]}
+        revenueTrend={revenueTrend}
+        isTrendLoading={isTrendLoading}
+        periodOptions={periodOptions}
+        onPeriodChange={setSelectedPeriod}
+        totalRevenue={stats.totalRevenue}
+        totalCash={stats.totalCash}
+        totalBank={stats.totalBank}
+        recentRows={recentRows}
+        isLoading={isLoading}
+        onExportWord={handleOpenExportDialog}
+        onViewAll={() => navigate('/revenues')}
+        onAddTransaction={() => navigate('/revenues/create')}
+        onRowClick={(row) => setDetailRevenue(row)}
+        onUnsupportedAction={handleUnsupportedAction}
+      />
+
+      <DashboardLayout
+        activeNav="dashboard"
+        keyword={keyword}
+        onKeywordChange={setKeyword}
+        onNavigate={handleNavigate}
+        onExport={handleOpenExportDialog}
+        onProfileClick={() => navigate('/account')}
+        onUnsupportedAction={handleUnsupportedAction}
+        desktopOnly
+      >
+        <div className="mx-auto max-w-[1180px]">
+          <div className="mb-7 flex items-center justify-between gap-6">
+            <h1 className="text-4xl font-bold tracking-normal text-slate-950">Tổng quan doanh thu</h1>
+
+            <div className="grid grid-cols-3 border border-slate-200 bg-white p-1">
               {periodOptions.map((period) => (
                 <button
                   key={period.id}
                   type="button"
                   onClick={() => setSelectedPeriod(period.id)}
-                  className={`rounded-xl px-3 py-3 text-sm font-medium transition-colors ${
+                  className={`min-w-20 px-4 py-3 text-sm font-bold transition ${
                     selectedPeriod === period.id
-                      ? 'bg-teal-700 text-white'
-                      : 'text-slate-600 hover:bg-white hover:text-slate-800'
+                      ? 'border border-slate-200 bg-white text-teal-800 shadow-sm'
+                      : 'text-slate-600 hover:text-teal-800'
                   }`}
                 >
                   {period.label}
                 </button>
               ))}
             </div>
-
-            <Button type="button" variant="secondary" size="sm" onClick={handleOpenExportDialog}>
-              Xuất Word
-            </Button>
           </div>
-        </div>
 
-        {isLoading ? (
-          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 w-40 rounded bg-slate-200" />
-              <div className="h-10 w-56 rounded bg-slate-200" />
-              <div className="h-10 w-44 rounded-full bg-slate-200" />
-            </div>
-          </div>
-        ) : errorMessage ? (
-          <FormError message={errorMessage} />
-        ) : (
-          <StatCard {...featuredStat} featured />
-        )}
-      </section>
-
-      {!isLoading && !errorMessage && !hasAnyDashboardData ? (
-        <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-slate-800">Chưa có dữ liệu doanh thu</h2>
-          <p className="mt-2 text-sm text-slate-500">
-            Khi có bản ghi doanh thu trong hệ thống, dashboard sẽ hiển thị tổng quan tại đây.
-          </p>
-        </section>
-      ) : (
-        <>
-          <section className="grid gap-4 xl:grid-cols-[1.6fr_1fr]">
-            <RevenueChart
-              data={chartQuery.data || []}
-              periodLabel={periodOptions.find((item) => item.id === selectedPeriod)?.label || 'Ngày'}
+          <div className="grid gap-6 xl:grid-cols-[1.75fr_0.85fr]">
+            <SummaryRevenueCard
+              totalRevenue={stats.totalRevenue}
+              periodLabel={periodNouns[selectedPeriod]}
+              previousPeriodLabel={previousPeriodNouns[selectedPeriod]}
+              revenueTrend={revenueTrend}
+              isTrendLoading={isTrendLoading}
+              chartData={chartQuery.data || []}
+              isLoading={statsQuery.isLoading || chartQuery.isLoading}
+              error={errorMessage}
             />
-            <PaymentSplitCard data={paymentSplitData} />
+            <QuickStatsCard orderCount={stats.count} isLoading={statsQuery.isLoading} />
+          </div>
+
+          <section className="mt-7">
+            <h2 className="mb-5 text-3xl font-bold tracking-normal text-slate-950">Chi tiết dòng tiền</h2>
+            <div className="grid gap-6 xl:grid-cols-2">
+              <CashFlowCard
+                title="Tiền mặt"
+                icon="cash"
+                balance={stats.totalCash}
+                transactions={cashTransactions}
+                isLoading={isLoading}
+              />
+              <CashFlowCard
+                title="Tiền gửi tài khoản"
+                icon="bank"
+                balance={stats.totalBank}
+                transactions={bankTransactions}
+                isLoading={isLoading}
+              />
+            </div>
           </section>
 
-          <RecentRevenueTable rows={recentRevenuesQuery.data?.rows || []} />
-        </>
-      )}
+          <div className="mt-7">
+            <RecentActivitiesTable
+              rows={recentRows}
+              isLoading={recentRevenuesQuery.isLoading}
+              onViewAll={() => navigate('/revenues')}
+              onRowClick={(row) => setDetailRevenue(row)}
+            />
+          </div>
+        </div>
+      </DashboardLayout>
+
+      <RevenueDetailModal
+        revenue={detailRevenue}
+        isOpen={Boolean(detailRevenue)}
+        onClose={() => setDetailRevenue(null)}
+        onEdit={(row) => navigate(`/revenues/${row.id || row._id}/edit`)}
+        onDelete={handleDeleteFromDetail}
+      />
+
+      <RevenueDeleteDialog
+        isOpen={Boolean(selectedRevenue)}
+        onClose={() => {
+          setSelectedRevenue(null);
+          setDeleteErrorMessage('');
+        }}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deleteRevenueMutation.isPending}
+        errorMessage={deleteErrorMessage}
+      />
 
       <RevenueWordExportDialog
         isOpen={isExportDialogOpen}
-        businessName={selectedBusinessItem?.name}
+        businessName={exportBusiness?.businessName}
         isSubmitting={exportRevenueWordMutation.isPending}
         onClose={() => setIsExportDialogOpen(false)}
         onSubmit={handleExportRevenueWord}
       />
-    </DashboardLayout>
+    </>
   );
 };

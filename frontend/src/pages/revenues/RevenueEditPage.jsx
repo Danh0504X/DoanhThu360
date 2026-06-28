@@ -1,32 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
-import { RevenueCodePreview } from '../../components/revenues/RevenueCodePreview.jsx';
+import { Icon } from '../../components/dashboard/DashboardIcons.jsx';
 import { RevenueDeleteDialog } from '../../components/revenues/RevenueDeleteDialog.jsx';
-import { RevenueForm } from '../../components/revenues/RevenueForm.jsx';
-import { Button } from '../../components/ui/Button.jsx';
+import { RevenueRecordCreateForm } from '../../components/revenues/RevenueRecordCreateForm.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
-import { useAuth } from '../../hooks/useAuth.js';
+import { useToast } from '../../components/ui/useToast.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
 import {
   useDeleteRevenue,
   useRevenue,
   useUpdateRevenue,
 } from '../../hooks/useRevenues.js';
-
-const mapRevenueFormToPayload = (values) => ({
-  businessId: values.businessId,
-  revenueDate: values.date,
-  content: values.content,
-  cashAmount: Number(values.cashAmount || 0),
-  bankAmount: Number(values.bankAmount || 0),
-  note: values.note || '',
-});
+import { mapRevenueFormToPayload } from '../../utils/revenueMappers.js';
 
 export const RevenueEditPage = () => {
   const { id } = useParams();
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const businessesQuery = useBusinesses({ status: 'active' });
   const revenueQuery = useRevenue(id);
   const updateRevenueMutation = useUpdateRevenue();
@@ -43,9 +34,12 @@ export const RevenueEditPage = () => {
     [businessesQuery.data],
   );
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/revenues');
   };
 
   const handleSubmit = async (values) => {
@@ -55,12 +49,15 @@ export const RevenueEditPage = () => {
         id,
         data: mapRevenueFormToPayload(values),
       });
+      toast.success('Cập nhật doanh thu thành công.');
       navigate('/revenues', {
         replace: true,
         state: { successMessage: 'Cập nhật doanh thu thành công.' },
       });
     } catch (error) {
-      setSubmitError(error.message || 'Không thể cập nhật doanh thu.');
+      const message = error.message || 'Không thể cập nhật doanh thu.';
+      setSubmitError(message);
+      toast.error(message);
     }
   };
 
@@ -77,61 +74,119 @@ export const RevenueEditPage = () => {
     }
   };
 
-  const headerError = revenueQuery.error?.message || businessesQuery.error?.message;
+  const isLoading = revenueQuery.isLoading;
+  const loadError = revenueQuery.error?.message || businessesQuery.error?.message;
+
+  const renderForm = (variant) => {
+    if (isLoading) {
+      return (
+        <div className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
+          Đang tải dữ liệu doanh thu...
+        </div>
+      );
+    }
+
+    if (loadError) {
+      return <FormError message={loadError} className="rounded-md" />;
+    }
+
+    return (
+      <RevenueRecordCreateForm
+        mode="edit"
+        title="Chỉnh sửa bảng ghi"
+        subtitle="Cập nhật thông tin doanh thu đã ghi nhận."
+        businessOptions={businessOptions}
+        initialValues={revenueQuery.data}
+        isBusinessLoading={businessesQuery.isLoading}
+        isSubmitting={updateRevenueMutation.isPending}
+        submitError={submitError}
+        onSubmit={handleSubmit}
+        onCancel={handleBack}
+        variant={variant}
+      />
+    );
+  };
 
   return (
-    <DashboardLayout
-      userName={user?.name || user?.username || 'Người dùng'}
-      businessOptions={[
-        { id: revenueQuery.data?.businessId || 'all', name: 'Chọn hộ kinh doanh' },
-        ...businessOptions,
-      ]}
-      selectedBusiness={revenueQuery.data?.businessId || 'all'}
-      onBusinessChange={() => {}}
-      onLogout={handleLogout}
-      activeNav="revenue"
-    >
-      <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm text-slate-500">Quản lý doanh thu &gt; Chỉnh sửa</p>
-            <h1 className="mt-3 text-2xl font-semibold text-slate-800">Chỉnh sửa doanh thu</h1>
-            <p className="mt-2 text-sm text-slate-500">
-              Cập nhật dữ liệu doanh thu và điều chỉnh thông tin khi cần.
-            </p>
+    <>
+      {/* Mobile layout */}
+      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-2">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="inline-flex h-10 items-center gap-1.5 rounded-md px-2 text-sm font-bold text-[#2D7A7F]"
+            aria-label="Quay lại"
+          >
+            <Icon name="arrowLeft" className="h-5 w-5" />
+            Quay lại
+          </button>
+          <p className="text-sm font-bold text-[#2D7A7F]">Chỉnh sửa</p>
+          <button
+            type="button"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            disabled={isLoading || Boolean(loadError)}
+            className="grid h-10 w-10 place-items-center text-red-500 disabled:opacity-40"
+            aria-label="Xóa bản ghi"
+          >
+            <Icon name="trash" className="h-5 w-5" />
+          </button>
+        </header>
+
+        <main className="px-4 pt-5">
+          <h1 className="text-2xl font-bold text-slate-950">Chỉnh sửa bảng ghi</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Cập nhật thông tin doanh thu đã ghi nhận trong hệ thống.
+          </p>
+
+          <div className="mt-6">{renderForm('mobile')}</div>
+        </main>
+      </div>
+
+      {/* Desktop layout */}
+      <DashboardLayout
+        activeNav="cash-flow"
+        onProfileClick={() => navigate('/account')}
+        desktopOnly
+      >
+        <div className="mx-auto max-w-[920px]">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <nav className="flex items-center gap-3 text-xs font-bold text-slate-500">
+              <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+                Dashboard
+              </button>
+              <span>&gt;</span>
+              <button type="button" onClick={() => navigate('/revenues')} className="hover:text-[#2D7A7F]">
+                Dòng tiền
+              </button>
+              <span>&gt;</span>
+              <span className="text-[#2D7A7F]">Chỉnh sửa</span>
+            </nav>
+
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                disabled={isLoading || Boolean(loadError)}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-red-200 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-40"
+              >
+                <Icon name="trash" className="h-4 w-4" />
+                Xóa bản ghi
+              </button>
+              <button
+                type="button"
+                onClick={handleBack}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                <Icon name="arrowLeft" className="h-4 w-4" />
+                Quay lại
+              </button>
+            </div>
           </div>
 
-          <Button type="button" variant="danger" onClick={() => setIsDeleteDialogOpen(true)}>
-            Xóa bản ghi
-          </Button>
+          {renderForm('desktop')}
         </div>
-      </section>
-
-      {revenueQuery.isLoading ? (
-        <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
-          Đang tải dữ liệu doanh thu...
-        </section>
-      ) : headerError ? (
-        <FormError message={headerError} />
-      ) : (
-        <RevenueForm
-          mode="edit"
-          defaultValues={revenueQuery.data}
-          businessOptions={businessOptions}
-          onSubmit={handleSubmit}
-          isSubmitting={updateRevenueMutation.isPending}
-          onCancel={() => navigate('/revenues')}
-          errorMessage={submitError}
-          actions={({ cashAmount, bankAmount, totalAmount, code }) => (
-            <RevenueCodePreview
-              code={code}
-              cashAmount={cashAmount}
-              bankAmount={bankAmount}
-              totalAmount={totalAmount}
-            />
-          )}
-        />
-      )}
+      </DashboardLayout>
 
       <RevenueDeleteDialog
         isOpen={isDeleteDialogOpen}
@@ -143,6 +198,6 @@ export const RevenueEditPage = () => {
         isDeleting={deleteRevenueMutation.isPending}
         errorMessage={deleteErrorMessage}
       />
-    </DashboardLayout>
+    </>
   );
 };

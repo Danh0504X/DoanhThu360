@@ -7,19 +7,20 @@ import {
   getUsersController,
   updateUserController,
 } from '../controllers/user.controller.js';
-import { authenticate, authorize } from '../middlewares/auth.middleware.js';
+import { authenticate, authorize, authorizeSelfOrAdmin } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
+// Listing and creating users is an admin-only operation.
 router
   .route('/')
-  .get(getUsersController)
-  .post(createUserController);
+  .get(authenticate, authorize('admin'), getUsersController)
+  .post(authenticate, authorize('admin'), createUserController);
 
 router
   .route('/:id')
-  .get(getUserByIdController)
-  .patch(authenticate, updateUserController)
+  .get(authenticate, authorizeSelfOrAdmin('id'), getUserByIdController)
+  .patch(authenticate, authorizeSelfOrAdmin('id'), updateUserController)
   .delete(authenticate, authorize('admin'), deleteUserController);
 
 // Admin-only: update role and/or status

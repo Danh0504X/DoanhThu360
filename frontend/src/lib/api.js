@@ -46,7 +46,8 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response.data,
+  // Blob downloads need the full response (headers for filename); others get the body.
+  (response) => (response.config?.responseType === 'blob' ? response : response.data),
   async (error) => {
     const originalRequest = error.config;
 
@@ -83,9 +84,8 @@ api.interceptors.response.use(
           setRefreshToken(newRefreshToken);
         }
 
-        // We only manually update the store state token here because the request interceptor reads from it,
-        // but setSession does too much. We will just let tokenStorage handle it, but we should update authStore token.
-        authStore.getSnapshot().token = accessToken;
+        // Update the store through its setter so subscribed components re-render.
+        authStore.setToken(accessToken);
 
         processQueue(null, accessToken);
 
@@ -99,6 +99,11 @@ api.interceptors.response.use(
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Blob requests parse their own error body (it's a Blob, not JSON) — pass the raw error through.
+    if (originalRequest?.responseType === 'blob') {
+      return Promise.reject(error);
     }
 
     const normalizedError = new Error(

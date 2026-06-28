@@ -29,7 +29,7 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto rounded-2xl border px-4 py-3 shadow-lg ${
+            className={`pointer-events-auto border px-4 py-3 shadow-lg ${
               toast.type === 'error'
                 ? 'border-red-200 bg-white text-red-700'
                 : toast.type === 'info'

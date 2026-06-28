@@ -15,8 +15,12 @@ export const accountService = {
     return api.put(`${ACCOUNT_URL}/change-password`, data);
   },
 
-  resendVerifyEmail() {
-    return api.post(`${ACCOUNT_URL}/resend-verification-email`);
+  sendVerificationCode() {
+    return api.post(`${ACCOUNT_URL}/send-verification-code`);
+  },
+
+  verifyEmail(data) {
+    return api.post(`${ACCOUNT_URL}/verify-email`, data);
   },
 
   getRecentActivities() {

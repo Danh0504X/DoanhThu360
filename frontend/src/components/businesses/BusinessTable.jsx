@@ -1,18 +1,9 @@
-import { BUSINESS_TYPE_OPTIONS } from '../../schemas/businessSchema.js';
+import { Icon } from '../dashboard/DashboardIcons.jsx';
 import { BusinessStatusBadge } from './BusinessStatusBadge.jsx';
 
-const businessTypeLabelMap = Object.fromEntries(
-  BUSINESS_TYPE_OPTIONS.map((option) => [option.value, option.label]),
-);
-
 const BusinessIcon = () => (
-  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
-    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-      <path d="M5 21h14" />
-      <path d="M7 21V7l5-3 5 3v14" />
-      <path d="M9 11h6" />
-      <path d="M9 15h6" />
-    </svg>
+  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-teal-50 text-[#2D7A7F]">
+    <Icon name="briefcase" className="h-5 w-5" />
   </div>
 );
 
@@ -32,14 +23,56 @@ export const BusinessTable = ({
   const totalPages = pagination?.totalPages || 1;
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {/* Mobile: card list */}
+      <div className="divide-y divide-slate-100 lg:hidden">
+        {rows.map((business) => (
+          <article key={business._id} className="flex items-start gap-3 p-4">
+            <BusinessIcon />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <p className="truncate font-bold text-slate-900">{business.businessName}</p>
+                <BusinessStatusBadge status={business.status} />
+              </div>
+              <p className="mt-1 text-xs font-medium text-slate-500">
+                MST: {business.taxCode || 'Chưa cập nhật'}
+              </p>
+              <p className="mt-0.5 text-xs font-medium text-slate-500 line-clamp-2">
+                {business.address || 'Chưa cập nhật địa chỉ'}
+              </p>
+
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onEdit(business)}
+                  className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-slate-200 text-xs font-bold text-slate-600 transition active:bg-slate-50"
+                >
+                  Sửa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onToggleStatus(business)}
+                  className={`inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-bold transition ${
+                    business.status === 'active'
+                      ? 'border-red-200 text-red-500 active:bg-red-50'
+                      : 'border-emerald-200 text-emerald-600 active:bg-emerald-50'
+                  }`}
+                >
+                  {business.status === 'active' ? 'Ngừng' : 'Kích hoạt'}
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="min-w-full divide-y divide-slate-100 text-sm">
+          <thead className="bg-slate-50 text-left text-xs font-bold uppercase text-slate-500">
             <tr>
               <th className="px-6 py-4">Tên hộ kinh doanh</th>
               <th className="px-6 py-4">Mã số thuế</th>
-              <th className="px-6 py-4">Loại hình</th>
               <th className="px-6 py-4">Địa chỉ</th>
               <th className="px-6 py-4">Trạng thái</th>
               <th className="px-6 py-4 text-right">Thao tác</th>
@@ -47,23 +80,20 @@ export const BusinessTable = ({
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map((business) => (
-              <tr key={business._id} className="align-top">
+              <tr key={business._id} className="align-top transition hover:bg-slate-50/80">
                 <td className="px-6 py-5">
                   <div className="flex items-start gap-3">
                     <BusinessIcon />
                     <div className="min-w-0">
-                      <p className="font-semibold text-slate-800">{business.businessName}</p>
-                      <p className="mt-1 text-xs text-slate-500">{business.email || business.phone || 'Chưa cập nhật liên hệ'}</p>
+                      <p className="font-bold text-slate-900">{business.businessName}</p>
+                      <p className="mt-1 text-xs font-medium text-slate-500">
+                        {business.email || business.phone || 'Chưa cập nhật liên hệ'}
+                      </p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-5 text-slate-600">{business.taxCode || 'Chưa cập nhật'}</td>
-                <td className="px-6 py-5">
-                  <span className="inline-flex rounded-xl bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                    {businessTypeLabelMap[business.businessType] || 'Khác'}
-                  </span>
-                </td>
-                <td className="max-w-xs px-6 py-5 text-slate-600">
+                <td className="px-6 py-5 font-medium text-slate-600">{business.taxCode || 'Chưa cập nhật'}</td>
+                <td className="max-w-xs px-6 py-5 font-medium text-slate-600">
                   <span className="line-clamp-2">{business.address || 'Chưa cập nhật'}</span>
                 </td>
                 <td className="px-6 py-5">
@@ -74,7 +104,7 @@ export const BusinessTable = ({
                     <button
                       type="button"
                       onClick={() => onEdit(business)}
-                      className="rounded-xl border border-slate-200 p-2 text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+                      className="grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-slate-500 transition hover:bg-slate-50 hover:text-[#2D7A7F]"
                       aria-label="Sửa hộ kinh doanh"
                     >
                       <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -85,7 +115,7 @@ export const BusinessTable = ({
                     <button
                       type="button"
                       onClick={() => onToggleStatus(business)}
-                      className={`rounded-xl border p-2 transition ${
+                      className={`grid h-9 w-9 place-items-center rounded-md border transition ${
                         business.status === 'active'
                           ? 'border-red-200 text-red-500 hover:bg-red-50'
                           : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
@@ -113,7 +143,7 @@ export const BusinessTable = ({
       </div>
 
       <div className="flex flex-col gap-4 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm font-medium text-slate-500">
           Hiển thị {start} - {end} trên tổng số {total} hộ kinh doanh
         </p>
 
@@ -122,7 +152,7 @@ export const BusinessTable = ({
             type="button"
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage <= 1}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ‹
           </button>
@@ -131,9 +161,9 @@ export const BusinessTable = ({
               key={pageNumber}
               type="button"
               onClick={() => onPageChange(pageNumber)}
-              className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+              className={`rounded-md px-3 py-2 text-sm font-bold transition ${
                 currentPage === pageNumber
-                  ? 'bg-teal-700 text-white'
+                  ? 'bg-[#2D7A7F] text-white'
                   : 'border border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
@@ -144,7 +174,7 @@ export const BusinessTable = ({
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage >= totalPages}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-md border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
             ›
           </button>

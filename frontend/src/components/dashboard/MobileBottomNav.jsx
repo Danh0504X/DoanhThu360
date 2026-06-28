@@ -1,28 +1,65 @@
-import { NavLink } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Icon } from './DashboardIcons.jsx';
 
-const mobileItems = [
-  { id: 'overview', label: 'Trang chủ', to: '/dashboard', icon: '⌂' },
-  { id: 'revenue', label: 'Doanh thu', to: '/revenues', icon: '◫' },
-  { id: 'business', label: 'Hộ KD', to: '/businesses', icon: '▣' },
-  { id: 'account', label: 'Tài khoản', to: '/account', icon: '◌' },
+const TABS = [
+  { id: 'dashboard', label: 'Trang chủ', icon: 'home', to: '/dashboard' },
+  { id: 'revenues', label: 'Doanh thu', icon: 'cash', to: '/revenues' },
+  { id: 'businesses', label: 'Hộ KD', icon: 'briefcase', to: '/businesses' },
+  { id: 'analytics', label: 'Thống kê', icon: 'analytics', to: '/analytics' },
+  { id: 'account', label: 'Cá nhân', icon: 'user', to: '/account' },
 ];
 
-export const MobileBottomNav = ({ activeItem = 'overview' }) => (
-  <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-2 py-2 backdrop-blur lg:hidden">
-    <div className="mx-auto grid max-w-md grid-cols-4 gap-1">
-      {mobileItems.map((item) => {
-        const isActive = activeItem === item.id;
-        const className = `rounded-2xl px-2 py-2 text-center text-xs font-medium ${
-          isActive ? 'bg-teal-50 text-teal-800' : 'text-slate-500'
-        }`;
+// Routes that own a focused, full-screen flow (forms with their own bottom action
+// bar). We hide the global nav there so it never collides with a fixed submit button.
+const isFocusedRoute = (pathname) => /\/(create|edit)(\/|$)/.test(pathname) || pathname.endsWith('/create') || pathname.endsWith('/edit');
+
+const resolveActive = (pathname) => {
+  if (pathname.startsWith('/dashboard')) return 'dashboard';
+  if (pathname.startsWith('/revenues')) return 'revenues';
+  if (pathname.startsWith('/businesses')) return 'businesses';
+  if (pathname.startsWith('/analytics')) return 'analytics';
+  if (pathname.startsWith('/account')) return 'account';
+  return '';
+};
+
+/**
+ * Persistent bottom navigation shown on every authenticated page on mobile.
+ * Rendered once globally (see ProtectedRoute) so navigation is consistent across
+ * the app instead of each page reinventing its own mobile chrome.
+ */
+export const MobileBottomNav = () => {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  if (isFocusedRoute(pathname)) return null;
+
+  const active = resolveActive(pathname);
+
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_12px_rgba(15,23,42,0.06)] backdrop-blur lg:hidden">
+      {TABS.map((tab) => {
+        const isActive = active === tab.id;
 
         return (
-          <NavLink key={item.id} to={item.to} className={className}>
-            <span className="mb-1 block text-base">{item.icon}</span>
-            {item.label}
-          </NavLink>
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => navigate(tab.to)}
+            aria-current={isActive ? 'page' : undefined}
+            className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors duration-150 ${
+              isActive ? 'text-teal-700' : 'text-slate-400 active:text-teal-700'
+            }`}
+          >
+            <span
+              className={`absolute top-0 h-0.5 w-8 rounded-full bg-teal-600 transition-opacity duration-200 ${
+                isActive ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+            <Icon name={tab.icon} className={`h-5 w-5 transition-transform duration-150 ${isActive ? '-translate-y-0.5' : ''}`} />
+            <span>{tab.label}</span>
+          </button>
         );
       })}
-    </div>
-  </nav>
-);
+    </nav>
+  );
+};

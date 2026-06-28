@@ -22,11 +22,7 @@ const businessSchema = new Schema(
       sparse: true,
 
     },
-    businessType: {
-      type: String,
-      enum: ['bán lẻ', 'dịch vụ', 'khác'],
-      default: 'bán lẻ',
-    },
+
     address: {
       type: String,
       trim: true,

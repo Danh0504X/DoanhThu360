@@ -43,10 +43,24 @@ export const useChangePassword = () =>
     mutationFn: accountService.changePassword,
   });
 
-export const useResendVerifyEmail = () =>
+export const useSendVerificationCode = () =>
   useMutation({
-    mutationFn: accountService.resendVerifyEmail,
+    mutationFn: accountService.sendVerificationCode,
   });
+
+export const useVerifyEmail = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: accountService.verifyEmail,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.profile }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.currentUser }),
+      ]);
+    },
+  });
+};
 
 export const useRecentActivities = () =>
   useQuery({

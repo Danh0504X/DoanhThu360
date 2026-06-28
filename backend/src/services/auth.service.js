@@ -1,19 +1,54 @@
 import bcrypt from 'bcryptjs';
 import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
+import RefreshToken from '../models/RefreshToken.js';
+import UserToken from '../models/UserToken.js';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+  decodeToken,
+} from '../utils/jwt.js';
+import { hashToken } from '../utils/hash.js';
+import { createError } from '../utils/errors.js';
+import { generateOtpCode, sendPasswordResetCode } from './email.service.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const SALT_ROUNDS = 12;
-
-const createError = (message, statusCode) =>
-  Object.assign(new Error(message), { statusCode });
+const PASSWORD_RESET_EXPIRES_MINUTES = 10;
 
 const buildTokenPayload = (user) => ({
   sub: user._id.toString(),
   role: user.role,
   username: user.username ?? null,
 });
+
+// Persist a hashed refresh token so it can be validated and revoked later.
+const persistRefreshToken = async (userId, token, meta = {}) => {
+  const decoded = decodeToken(token);
+  const expiresAt = decoded?.exp
+    ? new Date(decoded.exp * 1000)
+    : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  await RefreshToken.create({
+    userId,
+    tokenHash: hashToken(token),
+    expiresAt,
+    userAgent: meta.userAgent,
+    ipAddress: meta.ipAddress,
+  });
+};
+
+// Build access + refresh tokens for a user and store the refresh token.
+const issueTokens = async (user, meta = {}) => {
+  const payload = buildTokenPayload(user);
+  const accessToken = generateAccessToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+
+  await persistRefreshToken(user._id, refreshToken, meta);
+
+  return { accessToken, refreshToken };
+};
 
 const sanitizeUser = (user) => ({
   _id: user._id,
@@ -60,17 +95,16 @@ export const registerUser = async ({ username, email, password, name }) => {
     authProvider: 'local',
   });
 
-  const payload = buildTokenPayload(user);
+  const tokens = await issueTokens(user);
   return {
     user: sanitizeUser(user),
-    accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload),
+    ...tokens,
   };
 };
 
 // ─── Login ───────────────────────────────────────────────────────────────────
 
-export const loginUser = async ({ identifier, password }) => {
+export const loginUser = async ({ identifier, password }, meta = {}) => {
   const id = identifier.toLowerCase();
 
   const user = await User.findOne({
@@ -87,24 +121,23 @@ export const loginUser = async ({ identifier, password }) => {
 
   user.lastLogin = new Date();
   user.lastLoginMeta = {
-    userAgent: null,
-    platform: null,
-    browser: null,
-    ipAddress: null,
+    userAgent: meta.userAgent || null,
+    platform: meta.platform || null,
+    browser: meta.browser || null,
+    ipAddress: meta.ipAddress || null,
   };
   await user.save();
 
-  const payload = buildTokenPayload(user);
+  const tokens = await issueTokens(user, meta);
   return {
     user: sanitizeUser(user),
-    accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload),
+    ...tokens,
   };
 };
 
 // ─── Google OAuth ─────────────────────────────────────────────────────────────
 
-export const loginWithGoogle = async (idToken) => {
+export const loginWithGoogle = async (idToken, meta = {}) => {
   let ticket;
   try {
     ticket = await googleClient.verifyIdToken({
@@ -148,11 +181,10 @@ export const loginWithGoogle = async (idToken) => {
     });
   }
 
-  const payload = buildTokenPayload(user);
+  const tokens = await issueTokens(user, meta);
   return {
     user: sanitizeUser(user),
-    accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload),
+    ...tokens,
   };
 };
 
@@ -166,6 +198,15 @@ export const refreshAccessToken = async (token) => {
     throw createError('Invalid or expired refresh token', 401);
   }
 
+  // The token must still exist in our store and not have been revoked (logout).
+  const stored = await RefreshToken.findOne({
+    tokenHash: hashToken(token),
+    userId: decoded.sub,
+  });
+  if (!stored || stored.isRevoked || stored.expiresAt < new Date()) {
+    throw createError('Invalid or expired refresh token', 401);
+  }
+
   const user = await User.findById(decoded.sub);
   if (!user) throw createError('User not found', 404);
   if (user.status === 'banned') throw createError('Account is banned', 403);
@@ -173,6 +214,97 @@ export const refreshAccessToken = async (token) => {
 
   const payload = buildTokenPayload(user);
   return { accessToken: generateAccessToken(payload) };
+};
+
+// ─── Logout ────────────────────────────────────────────────────────────────────
+
+// Revoke the given refresh token so it can no longer be used to refresh.
+export const logoutUser = async (userId, token) => {
+  if (!token) return;
+
+  await RefreshToken.updateOne(
+    { tokenHash: hashToken(token), userId },
+    { $set: { isRevoked: true, revokedAt: new Date() } },
+  );
+};
+
+// ─── Forgot Password ────────────────────────────────────────────────────────
+
+// Step 1: user requests a reset. We email a 6-digit code and store its hash.
+// Always returns the same generic message so the endpoint can't be used to probe
+// which emails have accounts.
+export const requestPasswordReset = async ({ email }) => {
+  const genericResponse = {
+    message: 'If an account exists for this email, a reset code has been sent.',
+  };
+
+  const normalizedEmail = String(email).toLowerCase().trim();
+  const user = await User.findOne({
+    email: normalizedEmail,
+    authProvider: 'local',
+  });
+
+  // No local account (missing, or signs in with Google) -> stay generic.
+  if (!user) return genericResponse;
+
+  // Invalidate any earlier, still-pending reset codes for this user.
+  await UserToken.updateMany(
+    { userId: user._id, type: 'password_reset', usedAt: null, isRevoked: false },
+    { $set: { isRevoked: true, revokedAt: new Date() } },
+  );
+
+  const code = generateOtpCode();
+  await UserToken.create({
+    userId: user._id,
+    type: 'password_reset',
+    tokenHash: hashToken(code),
+    email: normalizedEmail,
+    expiresAt: new Date(Date.now() + PASSWORD_RESET_EXPIRES_MINUTES * 60 * 1000),
+  });
+
+  await sendPasswordResetCode({
+    to: normalizedEmail,
+    code,
+    expiresInMinutes: PASSWORD_RESET_EXPIRES_MINUTES,
+  });
+
+  return genericResponse;
+};
+
+// Step 2: user submits the emailed code + a new password.
+export const resetPassword = async ({ email, code, newPassword }) => {
+  const normalizedEmail = String(email).toLowerCase().trim();
+  const user = await User.findOne({
+    email: normalizedEmail,
+    authProvider: 'local',
+  });
+  if (!user) throw createError('Invalid or expired reset code', 400);
+
+  // The code must hash to a stored token that is unused, not revoked, not expired.
+  const tokenDoc = await UserToken.findOne({
+    userId: user._id,
+    type: 'password_reset',
+    tokenHash: hashToken(code),
+    usedAt: null,
+    isRevoked: false,
+    expiresAt: { $gt: new Date() },
+  });
+  if (!tokenDoc) throw createError('Invalid or expired reset code', 400);
+
+  user.password = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  await user.save();
+
+  // Single-use: burn the code so it can't be replayed.
+  tokenDoc.usedAt = new Date();
+  await tokenDoc.save();
+
+  // Force every existing session to re-authenticate after a password reset.
+  await RefreshToken.updateMany(
+    { userId: user._id, isRevoked: false },
+    { $set: { isRevoked: true, revokedAt: new Date() } },
+  );
+
+  return { message: 'Password has been reset successfully' };
 };
 
 // ─── Get Me ───────────────────────────────────────────────────────────────────

@@ -1,17 +1,21 @@
 import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import UserToken from '../models/UserToken.js';
 import { createError } from '../utils/errors.js';
+import { hashToken } from '../utils/hash.js';
+import { generateOtpCode, sendVerificationCode } from './email.service.js';
 
 const selectAccountFields =
-  'username email emailVerified emailVerifiedAt name dob role status avatarId authProvider lastLogin lastLoginMeta createdAt updatedAt';
+  'username email emailVerified emailVerifiedAt name phone dob role status avatarId authProvider lastLogin lastLoginMeta createdAt updatedAt';
 
 const PHONE_REGEX = /^(?:\+84|84|0)(?:\d){8,10}$/;
+const EMAIL_VERIFICATION_EXPIRES_MINUTES = 10;
 
 const sanitizeProfile = (user) => ({
   _id: user._id,
   username: user.username,
   fullName: user.name || '',
-  phone: user.preferences?.phone || '',
+  phone: user.phone || '',
   email: user.email || '',
   birthDate: user.dob || null,
   role: user.role,
@@ -71,14 +75,12 @@ export const updateProfile = async (userId, payload) => {
     updates.dob = payload.birthDate ? new Date(payload.birthDate) : null;
   }
 
-  const nextPreferences = { ...(user.preferences || {}) };
-
   if (payload.phone !== undefined) {
     const phone = String(payload.phone || '').trim();
     if (phone && !PHONE_REGEX.test(phone.replace(/\s+/g, ''))) {
       throw createError('Phone number is invalid', 400);
     }
-    nextPreferences.phone = phone;
+    updates.phone = phone;
   }
 
   if (payload.email !== undefined) {
@@ -98,8 +100,6 @@ export const updateProfile = async (userId, payload) => {
       updates.emailVerifiedAt = null;
     }
   }
-
-  updates.preferences = nextPreferences;
 
   const updatedUser = await User.findByIdAndUpdate(userId, updates, {
     new: true,
@@ -135,17 +135,92 @@ export const changePassword = async (userId, payload) => {
   return { success: true };
 };
 
-export const resendVerifyEmail = async (userId) => {
-  const user = await User.findById(userId).select(selectAccountFields);
+// Generate a 6-digit code, store its hash, and email it to the user (TaskFlow-style
+// OTP flow, reusing the UserToken model with type 'email_verification').
+export const sendEmailVerificationCode = async (userId) => {
+  const user = await User.findById(userId);
 
   if (!user) {
     throw createError('User not found', 404);
   }
 
+  if (!user.email) {
+    throw createError('Tài khoản chưa có email để xác minh', 400);
+  }
+
+  if (user.emailVerified) {
+    return { email: user.email, emailVerified: true, alreadyVerified: true };
+  }
+
+  // Invalidate any previous pending verification codes for this user.
+  await UserToken.updateMany(
+    { userId: user._id, type: 'email_verification', usedAt: null, isRevoked: false },
+    { $set: { isRevoked: true, revokedAt: new Date() } },
+  );
+
+  const code = generateOtpCode();
+  await UserToken.create({
+    userId: user._id,
+    type: 'email_verification',
+    tokenHash: hashToken(code),
+    email: user.email,
+    expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_EXPIRES_MINUTES * 60 * 1000),
+  });
+
+  await sendVerificationCode({
+    to: user.email,
+    code,
+    expiresInMinutes: EMAIL_VERIFICATION_EXPIRES_MINUTES,
+  });
+
   return {
     email: user.email,
-    emailVerified: Boolean(user.emailVerified),
+    emailVerified: false,
     sentAt: new Date(),
+    expiresInMinutes: EMAIL_VERIFICATION_EXPIRES_MINUTES,
+  };
+};
+
+// Verify the emailed code and mark the user's email as verified (single-use code).
+export const verifyEmailCode = async (userId, { code } = {}) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw createError('User not found', 404);
+  }
+
+  if (user.emailVerified) {
+    return { email: user.email, emailVerified: true, alreadyVerified: true };
+  }
+
+  if (!code || !/^\d{6}$/.test(String(code))) {
+    throw createError('Vui lòng nhập mã gồm 6 chữ số', 400);
+  }
+
+  const tokenDoc = await UserToken.findOne({
+    userId: user._id,
+    type: 'email_verification',
+    tokenHash: hashToken(code),
+    usedAt: null,
+    isRevoked: false,
+    expiresAt: { $gt: new Date() },
+  });
+
+  if (!tokenDoc) {
+    throw createError('Mã xác minh không hợp lệ hoặc đã hết hạn', 400);
+  }
+
+  user.emailVerified = true;
+  user.emailVerifiedAt = new Date();
+  await user.save();
+
+  tokenDoc.usedAt = new Date();
+  await tokenDoc.save();
+
+  return {
+    email: user.email,
+    emailVerified: true,
+    emailVerifiedAt: user.emailVerifiedAt,
   };
 };
 

@@ -27,7 +27,7 @@ export const RevenueWordExportDialog = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-      <div className="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg bg-white p-6 shadow-2xl">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-slate-800">Xuất sổ doanh thu ra Word</h2>
@@ -38,7 +38,7 @@ export const RevenueWordExportDialog = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
+            className="border border-slate-200 px-3 py-2 text-sm text-slate-500 transition hover:bg-slate-50 hover:text-slate-700"
           >
             Đóng
           </button>
@@ -52,7 +52,7 @@ export const RevenueWordExportDialog = ({
                 setPeriodType('month');
                 setValue('');
               }}
-              className={`rounded-2xl border px-4 py-4 text-left transition ${
+              className={`border px-4 py-4 text-left transition ${
                 periodType === 'month'
                   ? 'border-teal-700 bg-teal-50 text-teal-800'
                   : 'border-slate-200 text-slate-600 hover:bg-slate-50'
@@ -67,7 +67,7 @@ export const RevenueWordExportDialog = ({
                 setPeriodType('year');
                 setValue('');
               }}
-              className={`rounded-2xl border px-4 py-4 text-left transition ${
+              className={`border px-4 py-4 text-left transition ${
                 periodType === 'year'
                   ? 'border-teal-700 bg-teal-50 text-teal-800'
                   : 'border-slate-200 text-slate-600 hover:bg-slate-50'

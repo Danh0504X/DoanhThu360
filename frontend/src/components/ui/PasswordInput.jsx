@@ -38,7 +38,7 @@ export const PasswordInput = forwardRef(({
   return (
     <div className={className}>
       {label ? (
-        <label htmlFor={props.id} className="mb-2 block text-sm font-medium text-slate-700">
+        <label htmlFor={props.id} className="mb-2 block text-xs font-bold uppercase text-slate-600">
           {label}
         </label>
       ) : null}
@@ -47,8 +47,8 @@ export const PasswordInput = forwardRef(({
           ref={ref}
           type={visible ? 'text' : 'password'}
           className={[
-            'h-12 w-full rounded-xl border bg-white px-4 pr-12 text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100',
-            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200',
+            'h-12 w-full rounded-md border bg-slate-100 px-4 pr-12 text-sm font-semibold text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-[#2D7A7F] focus:bg-white focus:ring-2 focus:ring-teal-50',
+            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-100',
           ].join(' ')}
           {...props}
         />
@@ -61,8 +61,8 @@ export const PasswordInput = forwardRef(({
           <EyeIcon open={visible} />
         </button>
       </div>
-      {hint && !error ? <p className="mt-2 text-xs text-slate-500">{hint}</p> : null}
-      {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+      {hint && !error ? <p className="mt-2 text-xs font-medium text-slate-500">{hint}</p> : null}
+      {error ? <p className="mt-2 text-sm font-semibold text-red-600">{error}</p> : null}
     </div>
   );
 });

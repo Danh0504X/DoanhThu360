@@ -24,3 +24,17 @@ export const authorize = (...roles) =>
     }
     next();
   };
+
+// Allow access only to the resource owner (matching :param) or an admin.
+// Usage: router.get('/:id', authenticate, authorizeSelfOrAdmin('id'), handler)
+export const authorizeSelfOrAdmin = (idParam = 'id') =>
+  (req, res, next) => {
+    const requesterId = req.user?.sub;
+    const isSelf = requesterId && String(requesterId) === String(req.params[idParam]);
+    const isAdmin = req.user?.role === 'admin';
+
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Insufficient permissions', data: null });
+    }
+    next();
+  };

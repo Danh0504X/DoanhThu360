@@ -1,94 +1,163 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
-import { RevenueCodePreview } from '../../components/revenues/RevenueCodePreview.jsx';
-import { RevenueForm } from '../../components/revenues/RevenueForm.jsx';
-import { useAuth } from '../../hooks/useAuth.js';
+import { Icon } from '../../components/dashboard/DashboardIcons.jsx';
+import { RevenueRecordCreateForm } from '../../components/revenues/RevenueRecordCreateForm.jsx';
+import { useToast } from '../../components/ui/useToast.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
 import { useCreateRevenue } from '../../hooks/useRevenues.js';
-
-const mapRevenueFormToPayload = (values) => ({
-  businessId: values.businessId,
-  revenueDate: values.date,
-  content: values.content,
-  cashAmount: Number(values.cashAmount || 0),
-  bankAmount: Number(values.bankAmount || 0),
-  note: values.note || '',
-});
+import { mapRevenueFormToPayload } from '../../utils/revenueMappers.js';
 
 export const RevenueCreatePage = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const businessesQuery = useBusinesses({ status: 'active' });
   const createRevenueMutation = useCreateRevenue();
   const [submitError, setSubmitError] = useState('');
-  const [selectedBusiness, setSelectedBusiness] = useState('all');
 
   const businessOptions = useMemo(
     () => (businessesQuery.data?.rows || []).map((business) => ({
       id: business._id,
       name: business.businessName,
+      revenueCount: Number(business.revenueCount || 0),
     })),
     [businessesQuery.data],
   );
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
+  // Default to the business with the most records; fall back to the first one.
+  const defaultBusinessId = useMemo(() => {
+    if (!businessOptions.length) return '';
+    return businessOptions.reduce(
+      (best, option) => (option.revenueCount > best.revenueCount ? option : best),
+      businessOptions[0],
+    ).id;
+  }, [businessOptions]);
+
+  const handleUnsupportedAction = () => {
+    toast.info('Chức năng này chưa được backend hỗ trợ.');
+  };
+
+  const handleNavigate = (item) => {
+    if (item.id === 'dashboard') {
+      navigate('/dashboard');
+      return;
+    }
+
+    if (item.id === 'cash-flow') {
+      navigate('/revenues');
+      return;
+    }
+
+    if (item.to) {
+      navigate(item.to);
+      return;
+    }
+
+    handleUnsupportedAction();
+  };
+
+  const handleCancel = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate('/dashboard');
   };
 
   const handleSubmit = async (values) => {
     try {
       setSubmitError('');
       await createRevenueMutation.mutateAsync(mapRevenueFormToPayload(values));
-      navigate('/revenues', {
-        replace: true,
-        state: { successMessage: 'Thêm doanh thu thành công.' },
-      });
+      toast.success('Lưu bảng ghi thành công.');
+      navigate('/revenues', { replace: true });
     } catch (error) {
-      setSubmitError(error.message || 'Không thể thêm doanh thu.');
+      const message = error.message || 'Không thể lưu bảng ghi.';
+      setSubmitError(message);
+      toast.error(message);
     }
   };
 
-  return (
-    <DashboardLayout
-      userName={user?.name || user?.username || 'Người dùng'}
-      businessOptions={[
-        { id: 'all', name: 'Chọn hộ kinh doanh' },
-        ...businessOptions,
-      ]}
-      selectedBusiness={selectedBusiness}
-      onBusinessChange={setSelectedBusiness}
-      onLogout={handleLogout}
-      activeNav="revenue"
-    >
-      <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
-        <p className="text-sm text-slate-500">Quản lý doanh thu &gt; Thêm mới</p>
-        <h1 className="mt-3 text-2xl font-semibold text-slate-800">Nhập doanh thu chi tiết</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Cập nhật dữ liệu tài chính hằng ngày cho các cơ sở kinh doanh.
-        </p>
-      </section>
+  const businessError = businessesQuery.error?.message || '';
 
-      <RevenueForm
-        mode="create"
-        defaultValues={{
-          businessId: businessOptions[0]?.id || '',
-        }}
-        businessOptions={businessOptions}
-        onSubmit={handleSubmit}
-        isSubmitting={createRevenueMutation.isPending}
-        onCancel={() => navigate('/revenues')}
-        errorMessage={submitError}
-        actions={({ cashAmount, bankAmount, totalAmount, code }) => (
-          <RevenueCodePreview
-            code={code}
-            cashAmount={cashAmount}
-            bankAmount={bankAmount}
-            totalAmount={totalAmount}
+  return (
+    <>
+      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="grid h-10 w-10 place-items-center text-[#2D7A7F]"
+            aria-label="Quay lại"
+          >
+            <Icon name="arrowLeft" className="h-5 w-5" />
+          </button>
+          <p className="text-sm font-bold text-[#2D7A7F]">Thêm mới bảng ghi</p>
+          <button
+            type="button"
+            onClick={handleUnsupportedAction}
+            className="grid h-10 w-10 place-items-center text-slate-500"
+            aria-label="Menu"
+          >
+            <Icon name="menu" className="h-5 w-5" />
+          </button>
+        </header>
+
+        <main className="px-4 pt-5">
+          <h1 className="text-2xl font-bold text-slate-950">Chi tiết giao dịch</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Nhập thông tin doanh thu thực tế để cập nhật hệ thống báo cáo.
+          </p>
+
+          <div className="mt-6">
+            <RevenueRecordCreateForm
+              businessOptions={businessOptions}
+              defaultBusinessId={defaultBusinessId}
+              isBusinessLoading={businessesQuery.isLoading}
+              businessError={businessError}
+              isSubmitting={createRevenueMutation.isPending}
+              submitError={submitError}
+              onSubmit={handleSubmit}
+              onCancel={handleCancel}
+              variant="mobile"
+            />
+          </div>
+        </main>
+      </div>
+
+      <DashboardLayout
+        activeNav="cash-flow"
+        onNavigate={handleNavigate}
+        onExport={handleUnsupportedAction}
+        onProfileClick={() => navigate('/account')}
+        onUnsupportedAction={handleUnsupportedAction}
+        desktopOnly
+      >
+        <div className="mx-auto max-w-[920px]">
+          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-slate-500">
+            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+              Dashboard
+            </button>
+            <span>&gt;</span>
+            <button type="button" onClick={() => navigate('/revenues')} className="hover:text-[#2D7A7F]">
+              Dòng tiền
+            </button>
+            <span>&gt;</span>
+            <span className="text-[#2D7A7F]">Thêm mới bảng ghi</span>
+          </nav>
+
+          <RevenueRecordCreateForm
+            businessOptions={businessOptions}
+            defaultBusinessId={defaultBusinessId}
+            isBusinessLoading={businessesQuery.isLoading}
+            businessError={businessError}
+            isSubmitting={createRevenueMutation.isPending}
+            submitError={submitError}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
           />
-        )}
-      />
-    </DashboardLayout>
+        </div>
+      </DashboardLayout>
+    </>
   );
 };

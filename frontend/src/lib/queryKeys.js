@@ -10,6 +10,4 @@ export const queryKeys = {
   dashboard: (params = {}) => ['dashboard', params],
   dashboardChart: (params = {}) => ['dashboard', 'chart', params],
   dashboardRecentRevenues: (params = {}) => ['dashboard', 'recent-revenues', params],
-  reports: (params = {}) => ['reports', params],
-  taxReports: (params = {}) => ['taxReports', params],
 };

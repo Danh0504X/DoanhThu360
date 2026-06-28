@@ -1,34 +1,62 @@
 import { useNavigate } from 'react-router-dom';
-import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
-import { ChangePasswordForm } from '../../components/account/ChangePasswordForm.jsx';
-import { EmailVerificationCard } from '../../components/account/EmailVerificationCard.jsx';
 import { PersonalInfoForm } from '../../components/account/PersonalInfoForm.jsx';
-import { RecentActivityCard } from '../../components/account/RecentActivityCard.jsx';
-import { SecuritySupportCard } from '../../components/account/SecuritySupportCard.jsx';
+import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
+import { Icon } from '../../components/dashboard/DashboardIcons.jsx';
+import { MobileTopHeader } from '../../components/dashboard/MobileTopHeader.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
 import { useToast } from '../../components/ui/useToast.js';
-import { useAuth } from '../../hooks/useAuth.js';
-import {
-  useChangePassword,
-  useProfile,
-  useRecentActivities,
-  useResendVerifyEmail,
-  useUpdateProfile,
-} from '../../hooks/useAccount.js';
+import { useProfile, useUpdateProfile } from '../../hooks/useAccount.js';
+
+const SecurityActionRow = ({ icon, title, description, badge, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-slate-50"
+  >
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-teal-50 text-[#2D7A7F]">
+      <Icon name={icon} className="h-5 w-5" />
+    </span>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm font-bold text-slate-900">{title}</p>
+      <p className="mt-0.5 text-xs font-medium text-slate-500">{description}</p>
+    </div>
+    {badge ? (
+      <span className="shrink-0 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+        {badge}
+      </span>
+    ) : (
+      <Icon name="chevronRight" className="h-4 w-4 shrink-0 text-slate-400" />
+    )}
+  </button>
+);
 
 export const AccountSettingsPage = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  const { user, logout } = useAuth();
   const profileQuery = useProfile();
-  const recentActivitiesQuery = useRecentActivities();
   const updateProfileMutation = useUpdateProfile();
-  const changePasswordMutation = useChangePassword();
-  const resendVerifyEmailMutation = useResendVerifyEmail();
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
+  const handleUnsupportedAction = () => {
+    toast.info('Chức năng này chưa được backend hỗ trợ.');
+  };
+
+  const handleNavigate = (item) => {
+    if (item.id === 'dashboard') {
+      navigate('/dashboard');
+      return;
+    }
+
+    if (item.id === 'cash-flow') {
+      navigate('/revenues');
+      return;
+    }
+
+    if (item.to) {
+      navigate(item.to);
+      return;
+    }
+
+    handleUnsupportedAction();
   };
 
   const handleProfileSubmit = async (values) => {
@@ -40,99 +68,96 @@ export const AccountSettingsPage = () => {
     }
   };
 
-  const handlePasswordSubmit = async (values, reset) => {
-    try {
-      await changePasswordMutation.mutateAsync(values);
-      toast.success('Đổi mật khẩu thành công');
-      reset();
-    } catch (error) {
-      toast.error(error.message || 'Không thể đổi mật khẩu');
-    }
-  };
+  const emailVerified = Boolean(profileQuery.data?.emailVerified);
+  const errorMessage = profileQuery.error?.message;
 
-  const handleResendVerifyEmail = async () => {
-    try {
-      await resendVerifyEmailMutation.mutateAsync();
-      toast.success('Đã gửi lại email xác minh');
-    } catch (error) {
-      toast.error(error.message || 'Không thể gửi lại email xác minh');
-    }
-  };
-
-  const errorMessage = profileQuery.error?.message || recentActivitiesQuery.error?.message;
-
-  return (
-    <DashboardLayout
-      userName={user?.name || user?.username || 'Người dùng'}
-      businessOptions={[{ id: 'all', name: 'Chọn Hộ Kinh Doanh' }]}
-      selectedBusiness="all"
-      onBusinessChange={() => {}}
-      onLogout={handleLogout}
-      activeNav="account"
-      pageTitle="Tài khoản"
-      pageDescription="Cài đặt tài khoản"
-      headingTitle="Tài khoản"
-      headingDescription="Quản lý thông tin cá nhân và bảo mật"
-    >
-      <section className="rounded-[28px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-800">Cài đặt tài khoản</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Quản lý thông tin cá nhân và thiết lập bảo mật cho tài khoản của bạn.
-        </p>
-      </section>
-
-      {errorMessage ? <FormError message={errorMessage} /> : null}
+  const renderAccountContent = () => (
+    <>
+      {errorMessage ? <FormError message={errorMessage} className="rounded-md" /> : null}
 
       {profileQuery.isLoading ? (
-        <section className="rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
+        <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm font-medium text-slate-500">
           Đang tải thông tin tài khoản...
         </section>
       ) : (
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.86fr)]">
-          <div className="space-y-6">
-            <PersonalInfoForm
-              profile={profileQuery.data}
-              isSubmitting={updateProfileMutation.isPending}
-              onSubmit={handleProfileSubmit}
-            />
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.9fr)]">
+          <PersonalInfoForm
+            profile={profileQuery.data}
+            isSubmitting={updateProfileMutation.isPending}
+            onSubmit={handleProfileSubmit}
+          />
 
-            <section className="relative overflow-hidden rounded-[28px] bg-teal-700 p-6 text-white shadow-sm">
-              <div className="max-w-md">
-                <h2 className="text-xl font-semibold">Tài khoản Doanh Nghiệp</h2>
-                <p className="mt-2 text-sm leading-6 text-teal-50">
-                  Bạn đang sử dụng gói quản trị chuyên sâu dành cho hộ kinh doanh cá thể.
-                </p>
-              </div>
-              <div className="pointer-events-none absolute -right-8 -top-8 h-36 w-36 rounded-full border border-white/10" />
-              <div className="pointer-events-none absolute bottom-4 right-4 text-white/15">
-                <svg viewBox="0 0 24 24" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="1.3">
-                  <path d="M12 3 5 6v6c0 4.2 2.7 8 7 9 4.3-1 7-4.8 7-9V6l-7-3Z" />
-                </svg>
-              </div>
-            </section>
-          </div>
-
-          <div className="space-y-6">
-            <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="mb-5 text-xl font-semibold text-slate-800">Bảo mật</h2>
-              <div className="space-y-4">
-                <EmailVerificationCard
-                  isVerified={profileQuery.data?.emailVerified}
-                  isSending={resendVerifyEmailMutation.isPending}
-                  onResend={handleResendVerifyEmail}
-                />
-                <ChangePasswordForm
-                  isSubmitting={changePasswordMutation.isPending}
-                  onSubmit={handlePasswordSubmit}
-                />
-              </div>
-            </section>
-
-            <RecentActivityCard activities={recentActivitiesQuery.data || []} />
-            <SecuritySupportCard />
-          </div>
+          <section className="self-start rounded-lg border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 px-5 py-5">
+              <h2 className="text-xl font-bold text-slate-900">Bảo mật</h2>
+              <p className="mt-1 text-sm font-medium text-slate-500">
+                Quản lý mật khẩu và xác minh email của bạn.
+              </p>
+            </div>
+            <div className="divide-y divide-slate-100">
+              <SecurityActionRow
+                icon="shield"
+                title="Thay đổi mật khẩu"
+                description="Cập nhật mật khẩu đăng nhập của bạn."
+                onClick={() => navigate('/account/change-password')}
+              />
+              <SecurityActionRow
+                icon="user"
+                title="Xác minh Gmail"
+                description={emailVerified ? 'Email của bạn đã được xác minh.' : 'Email chưa được xác minh.'}
+                badge={emailVerified ? 'Đã xác minh' : null}
+                onClick={() => navigate('/account/verify-email')}
+              />
+            </div>
+          </section>
         </section>
       )}
-    </DashboardLayout>
+    </>
+  );
+
+  return (
+    <>
+      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
+        <MobileTopHeader title="Cá nhân" />
+
+        <main className="px-4 pt-5">
+          <h1 className="text-2xl font-bold text-slate-950">Cài đặt tài khoản</h1>
+          <p className="mb-6 mt-2 text-sm leading-6 text-slate-600">
+            Quản lý thông tin cá nhân và thiết lập bảo mật.
+          </p>
+
+          {renderAccountContent()}
+        </main>
+      </div>
+
+      <DashboardLayout
+        activeNav="more"
+        onNavigate={handleNavigate}
+        onExport={handleUnsupportedAction}
+        onProfileClick={() => navigate('/account')}
+        onUnsupportedAction={handleUnsupportedAction}
+        desktopOnly
+      >
+        <div className="mx-auto max-w-[1180px]">
+          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-slate-500">
+            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+              Dashboard
+            </button>
+            <span>&gt;</span>
+            <span className="text-[#2D7A7F]">Tài khoản</span>
+          </nav>
+
+          <div className="mb-7 rounded-lg border border-slate-200 bg-white p-6">
+            <p className="text-xs font-bold uppercase text-[#2D7A7F]">Account Settings</p>
+            <h1 className="mt-2 text-4xl font-bold tracking-normal text-slate-950">Cài đặt tài khoản</h1>
+            <p className="mt-2 text-sm font-medium text-slate-500">
+              Quản lý thông tin cá nhân và thiết lập bảo mật cho tài khoản của bạn.
+            </p>
+          </div>
+
+          {renderAccountContent()}
+        </div>
+      </DashboardLayout>
+    </>
   );
 };

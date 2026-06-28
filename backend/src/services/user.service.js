@@ -1,4 +1,8 @@
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
+import { createError } from '../utils/errors.js';
+
+const SALT_ROUNDS = 12;
 
 const selectUserFields = '-password -googleId';
 
@@ -8,8 +12,32 @@ const USER_UPDATE_FIELDS = ['name', 'gender', 'dob', 'avatarId', 'preferences'];
 // Additional fields only an admin can update
 const ADMIN_ONLY_FIELDS = ['role', 'status'];
 
-export const createUser = async (payload) => {
-  const user = await User.create(payload);
+// Fields accepted when an admin creates a user (never trust the raw payload).
+const USER_CREATE_FIELDS = [
+  'username',
+  'email',
+  'name',
+  'phone',
+  'gender',
+  'dob',
+  'avatarId',
+  'role',
+  'status',
+];
+
+export const createUser = async (payload = {}) => {
+  const safePayload = Object.fromEntries(
+    Object.entries(payload).filter(([key]) => USER_CREATE_FIELDS.includes(key)),
+  );
+
+  if (!payload.password) {
+    throw createError('Password is required', 400);
+  }
+
+  safePayload.password = await bcrypt.hash(payload.password, SALT_ROUNDS);
+  safePayload.authProvider = 'local';
+
+  const user = await User.create(safePayload);
 
   return User.findById(user._id).select(selectUserFields);
 };

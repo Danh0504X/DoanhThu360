@@ -11,7 +11,7 @@ export const revenueSchema = z.object({
   businessId: z.string().min(1, 'Vui lòng chọn hộ kinh doanh'),
   date: z.string().min(1, 'Vui lòng chọn ngày ghi nhận'),
   code: z.string().optional(),
-  content: z.string().trim().min(1, 'Vui lòng nhập nội dung doanh thu'),
+  content: z.string().trim().min(1, 'Vui lòng nhập nội dung bảng ghi'),
   cashAmount: coerceMoney('Tiền mặt'),
   bankAmount: coerceMoney('Tiền tài khoản'),
   note: z.string().optional(),
@@ -19,6 +19,6 @@ export const revenueSchema = z.object({
   (data) => Number(data.cashAmount || 0) + Number(data.bankAmount || 0) > 0,
   {
     path: ['cashAmount'],
-    message: 'Tổng doanh thu phải lớn hơn 0',
+    message: 'Vui lòng nhập ít nhất một khoản tiền',
   },
 );

@@ -16,3 +16,5 @@ export const generateRefreshToken = (payload) =>
 export const verifyAccessToken = (token) => jwt.verify(token, JWT_ACCESS_SECRET);
 
 export const verifyRefreshToken = (token) => jwt.verify(token, JWT_REFRESH_SECRET);
+
+export const decodeToken = (token) => jwt.decode(token);

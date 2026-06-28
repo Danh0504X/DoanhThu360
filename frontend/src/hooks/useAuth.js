@@ -33,6 +33,24 @@ export const useRegister = () =>
     mutationFn: authService.register,
   });
 
+export const useGoogleLogin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (idToken) => authService.googleLogin({ idToken }),
+    onSuccess: (response) => {
+      const responseData = response?.data || response;
+      authStore.setSession({
+        accessToken: responseData?.accessToken || null,
+        refreshToken: responseData?.refreshToken || null,
+        user: responseData?.user || null,
+        rememberMe: true,
+      });
+      queryClient.setQueryData(queryKeys.currentUser, responseData?.user || null);
+    },
+  });
+};
+
 export const useForgotPassword = () =>
   useMutation({
     mutationFn: authService.forgotPassword,
@@ -61,6 +79,7 @@ export const useAuth = () => {
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+  const googleLoginMutation = useGoogleLogin();
   const logoutMutation = useLogout();
 
   return {
@@ -69,9 +88,11 @@ export const useAuth = () => {
     isLoading: state.isAuthLoading,
     login: loginMutation.mutateAsync,
     register: registerMutation.mutateAsync,
+    googleLogin: googleLoginMutation.mutateAsync,
     logout: logoutMutation.mutateAsync,
     loginStatus: loginMutation.status,
     registerStatus: registerMutation.status,
+    googleLoginStatus: googleLoginMutation.status,
     logoutStatus: logoutMutation.status,
   };
 };

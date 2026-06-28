@@ -1,5 +1,5 @@
+import mongoose from 'mongoose';
 import Business from '../models/Business.js';
-import RevenueEntry from '../models/RevenueEntry.js';
 import { createError } from '../utils/errors.js';
 
 const sanitizeBusinessPayload = (payload) =>
@@ -25,10 +25,6 @@ export const getBusinesses = async (ownerId, filter = {}) => {
     query.status = filter.status;
   }
 
-  if (filter.type && filter.type !== 'all') {
-    query.businessType = filter.type;
-  }
-
   if (filter.keyword) {
     const keywordRegex = new RegExp(filter.keyword.trim(), 'i');
     query.$or = [
@@ -38,11 +34,39 @@ export const getBusinesses = async (ownerId, filter = {}) => {
     ];
   }
 
+  // Aggregate so each business carries its (non-deleted) revenue-entry count,
+  // letting the UI pick a sensible default (e.g. the busiest business).
+  const matchStage = { ...query, ownerId: new mongoose.Types.ObjectId(ownerId) };
+
   const [rows, total] = await Promise.all([
-    Business.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit),
+    Business.aggregate([
+      { $match: matchStage },
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'revenueentries',
+          let: { businessId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ['$businessId', '$$businessId'] },
+                isDeleted: { $ne: true },
+              },
+            },
+            { $count: 'count' },
+          ],
+          as: '_revenueCount',
+        },
+      },
+      {
+        $addFields: {
+          revenueCount: { $ifNull: [{ $arrayElemAt: ['$_revenueCount.count', 0] }, 0] },
+        },
+      },
+      { $project: { _revenueCount: 0 } },
+    ]),
     Business.countDocuments(query),
   ]);
 
@@ -75,18 +99,7 @@ export const deleteBusinessById = async (ownerId, businessId) => {
 
   if (!business) return null;
 
-  const hasRevenueEntries = await RevenueEntry.exists({
-    businessId,
-    userId: ownerId,
-    isDeleted: false,
-  });
-
-  if (hasRevenueEntries) {
-    business.status = 'inactive';
-    await business.save();
-    return business;
-  }
-
+  // Soft-delete: keep the record (and any linked revenue history) but mark inactive.
   business.status = 'inactive';
   await business.save();
   return business;
