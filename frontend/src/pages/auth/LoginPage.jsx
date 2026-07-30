@@ -63,9 +63,9 @@ export const LoginPage = () => {
       subtitle="Quản lý doanh thu và hỗ trợ khai báo thuế cho doanh nghiệp."
       illustration={heroImage}
       footer={(
-        <p className="text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-bone-600">
           Chưa có tài khoản?{' '}
-          <Link to="/register" className="font-medium text-teal-700 hover:text-teal-800">
+          <Link to="/register" className="font-medium text-primary-700 hover:text-primary-800">
             Đăng ký ngay
           </Link>
         </p>
@@ -95,16 +95,16 @@ export const LoginPage = () => {
           />
 
           <div className="flex items-center justify-between gap-4">
-            <label className="flex items-center gap-3 text-sm text-slate-600">
+            <label className="flex items-center gap-3 text-sm text-bone-600">
               <input
                 type="checkbox"
-                className="h-4 w-4 rounded border-slate-300 text-teal-700 focus:ring-teal-200"
+                className="h-4 w-4 rounded border-bone-300 text-primary-700 focus:ring-primary-200"
                 {...register('rememberMe')}
               />
               Ghi nhớ đăng nhập
             </label>
 
-            <Link to="/forgot-password" className="text-sm font-medium text-teal-700 hover:text-teal-800">
+            <Link to="/forgot-password" className="text-sm font-medium text-primary-700 hover:text-primary-800">
               Quên mật khẩu?
             </Link>
           </div>
@@ -114,10 +114,10 @@ export const LoginPage = () => {
               Đăng nhập
             </Button>
 
-            <div className="flex items-center gap-3 text-xs font-medium text-slate-400">
-              <span className="h-px flex-1 bg-slate-200" />
+            <div className="flex items-center gap-3 text-xs font-medium text-bone-400">
+              <span className="h-px flex-1 bg-bone-200" />
               hoặc
-              <span className="h-px flex-1 bg-slate-200" />
+              <span className="h-px flex-1 bg-bone-200" />
             </div>
 
             <GoogleLoginButton onCredential={handleGoogleCredential} onError={setGlobalError} />

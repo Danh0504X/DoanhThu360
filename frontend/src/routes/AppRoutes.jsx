@@ -16,8 +16,7 @@ import { RevenueEditPage } from '../pages/revenues/RevenueEditPage.jsx';
 import { RevenueListPage } from '../pages/revenues/RevenueListPage.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { PublicRoute } from './PublicRoute.jsx';
-
-const NotFoundPage = () => <Navigate to="/login" replace />;
+import { NotFoundPage } from './NotFoundPage.jsx';
 
 export const AppRoutes = () => (
   <Routes>
@@ -53,95 +52,22 @@ export const AppRoutes = () => (
         </PublicRoute>
       )}
     />
-    <Route
-      path="/dashboard"
-      element={(
-        <ProtectedRoute>
-          <DashboardPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/businesses"
-      element={(
-        <ProtectedRoute>
-          <BusinessListPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/businesses/create"
-      element={(
-        <ProtectedRoute>
-          <BusinessCreatePage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/businesses/:id/edit"
-      element={(
-        <ProtectedRoute>
-          <BusinessEditPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/revenues"
-      element={(
-        <ProtectedRoute>
-          <RevenueListPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/revenues/create"
-      element={(
-        <ProtectedRoute>
-          <RevenueCreatePage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/revenues/:id/edit"
-      element={(
-        <ProtectedRoute>
-          <RevenueEditPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/account"
-      element={(
-        <ProtectedRoute>
-          <AccountSettingsPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/account/change-password"
-      element={(
-        <ProtectedRoute>
-          <ChangePasswordPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/account/verify-email"
-      element={(
-        <ProtectedRoute>
-          <VerifyEmailPage />
-        </ProtectedRoute>
-      )}
-    />
-    <Route
-      path="/analytics"
-      element={(
-        <ProtectedRoute>
-          <AnalyticsPage />
-        </ProtectedRoute>
-      )}
-    />
+
+    <Route element={<ProtectedRoute />}>
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="/businesses" element={<BusinessListPage />} />
+      <Route path="/businesses/create" element={<BusinessCreatePage />} />
+      <Route path="/businesses/:id/edit" element={<BusinessEditPage />} />
+      <Route path="/revenues" element={<RevenueListPage />} />
+      <Route path="/revenues/create" element={<RevenueCreatePage />} />
+      <Route path="/revenues/:id/edit" element={<RevenueEditPage />} />
+      <Route path="/account" element={<AccountSettingsPage />} />
+      <Route path="/account/change-password" element={<ChangePasswordPage />} />
+      <Route path="/account/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/analytics" element={<AnalyticsPage />} />
+    </Route>
+
     <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="*" element={<NotFoundPage />} />
-  </Routes> 
+  </Routes>
 );

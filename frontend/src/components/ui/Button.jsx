@@ -12,13 +12,13 @@ export const Button = ({
 }) => {
   const Component = as || 'button';
 
-  const baseClasses = 'inline-flex items-center justify-center rounded-xl font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-teal-200 disabled:cursor-not-allowed disabled:opacity-60';
+  const baseClasses = 'inline-flex items-center justify-center rounded-md font-medium transition-brand focus:outline-none focus:ring-2 focus:ring-primary-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100';
   const variantClasses = {
-    primary: 'bg-teal-700 text-white hover:bg-teal-800',
-    secondary: 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50',
-    ghost: 'bg-transparent text-teal-700 hover:bg-teal-50',
-    soft: 'bg-teal-50 text-teal-800 hover:bg-teal-100',
-    danger: 'border border-red-200 bg-red-50 text-red-600 hover:bg-red-100',
+    primary: 'bg-primary-600 text-white hover:bg-primary-700',
+    secondary: 'border border-bone-200 bg-white text-bone-700 hover:bg-bone-50',
+    ghost: 'bg-transparent text-primary-700 hover:bg-primary-50',
+    soft: 'bg-primary-50 text-primary-800 hover:bg-primary-100',
+    danger: 'border border-red-200 bg-accent-red-bg text-accent-red hover:bg-red-100',
   };
   const sizeClasses = {
     sm: 'h-10 px-4 text-sm',

@@ -1,25 +1,41 @@
+import { Card } from '../ui/Card.jsx';
+import { Skeleton } from '../ui/Skeleton.jsx';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 
-const cards = [
-  { key: 'totalCash', label: 'Tổng tiền mặt' },
-  { key: 'totalBank', label: 'Tổng tài khoản' },
-  { key: 'totalRevenue', label: 'Tổng doanh thu thực tế', featured: true },
-];
+// Revenue-list hero: the totals for whatever filters are currently active,
+// shown once at the top of the page instead of only on the Dashboard.
+export const RevenueSummaryCards = ({ summary, isLoading, periodLabel = '' }) => (
+  <Card padding="lg" className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <p className="text-xs font-bold uppercase tracking-[0.08em] text-bone-500">
+        Tổng doanh thu{periodLabel ? ` ${periodLabel}` : ''}
+      </p>
+      {isLoading ? (
+        <Skeleton className="mt-4 h-10 w-56" />
+      ) : (
+        <p className="mt-3 font-serif text-4xl font-semibold leading-none tracking-tight text-primary-800">
+          {formatCurrency(summary?.totalRevenue || 0).replace(' VND', ' đ')}
+        </p>
+      )}
+    </div>
 
-export const RevenueSummaryCards = ({ summary }) => (
-  <section className="grid gap-4 md:grid-cols-3">
-    {cards.map((card) => (
-      <article
-        key={card.key}
-        className={`rounded-lg border p-5 shadow-sm ${
-          card.featured
-            ? 'border-teal-700 bg-teal-700 text-white'
-            : 'border-slate-200 bg-white text-slate-800'
-        }`}
-      >
-        <p className={`text-sm ${card.featured ? 'text-teal-50/90' : 'text-slate-500'}`}>{card.label}</p>
-        <p className="mt-3 text-2xl font-semibold">{formatCurrency(summary?.[card.key] || 0)}</p>
-      </article>
-    ))}
-  </section>
+    <div className="flex gap-3">
+      <div className="min-w-[120px] rounded-sm bg-bone-100 px-4 py-3">
+        <p className="text-[10.5px] font-bold uppercase tracking-wide text-bone-500">Tiền mặt</p>
+        {isLoading ? (
+          <Skeleton className="mt-2 h-5 w-16" />
+        ) : (
+          <p className="mt-1 text-base font-bold text-bone-800">{formatCurrency(summary?.totalCash || 0).replace(' VND', 'đ')}</p>
+        )}
+      </div>
+      <div className="min-w-[120px] rounded-sm bg-bone-100 px-4 py-3">
+        <p className="text-[10.5px] font-bold uppercase tracking-wide text-bone-500">Tài khoản</p>
+        {isLoading ? (
+          <Skeleton className="mt-2 h-5 w-16" />
+        ) : (
+          <p className="mt-1 text-base font-bold text-bone-800">{formatCurrency(summary?.totalBank || 0).replace(' VND', 'đ')}</p>
+        )}
+      </div>
+    </div>
+  </Card>
 );

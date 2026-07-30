@@ -73,9 +73,9 @@ export const RegisterPage = () => {
       subtitle="Bắt đầu quản lý doanh thu chuyên nghiệp ngay hôm nay."
       illustration={heroImage}
       footer={(
-        <p className="text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-bone-600">
           Đã có tài khoản?{' '}
-          <Link to="/login" className="font-medium text-teal-700 hover:text-teal-800">
+          <Link to="/login" className="font-medium text-primary-700 hover:text-primary-800">
             Đăng nhập
           </Link>
         </p>

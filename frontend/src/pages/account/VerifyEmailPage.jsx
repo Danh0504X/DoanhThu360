@@ -58,7 +58,7 @@ export const VerifyEmailPage = () => {
 
   const renderBody = () => {
     if (profileQuery.isLoading) {
-      return <p className="text-sm font-medium text-slate-500">Đang tải thông tin tài khoản...</p>;
+      return <p className="text-sm font-medium text-bone-500">Đang tải thông tin tài khoản...</p>;
     }
 
     if (isVerified) {
@@ -67,8 +67,8 @@ export const VerifyEmailPage = () => {
           <span className="grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
             <Icon name="shield" className="h-7 w-7" />
           </span>
-          <p className="mt-4 text-base font-bold text-slate-900">Email đã được xác minh</p>
-          <p className="mt-1 text-sm text-slate-500">{email}</p>
+          <p className="mt-4 text-base font-bold text-bone-900">Email đã được xác minh</p>
+          <p className="mt-1 text-sm text-bone-500">{email}</p>
           <Button type="button" size="lg" className="mt-6" onClick={() => navigate('/account')}>
             Quay lại tài khoản
           </Button>
@@ -84,9 +84,9 @@ export const VerifyEmailPage = () => {
 
     return (
       <>
-        <div className="rounded-md bg-slate-50 px-4 py-3">
-          <p className="text-xs font-bold uppercase text-slate-500">Email cần xác minh</p>
-          <p className="mt-1 text-sm font-semibold text-slate-800">{email}</p>
+        <div className="rounded-md bg-bone-50 px-4 py-3">
+          <p className="text-xs font-bold uppercase text-bone-500">Email cần xác minh</p>
+          <p className="mt-1 text-sm font-semibold text-bone-800">{email}</p>
         </div>
 
         {errorMessage ? <FormError message={errorMessage} className="mt-4" /> : null}
@@ -124,7 +124,7 @@ export const VerifyEmailPage = () => {
               type="button"
               onClick={handleSendCode}
               disabled={sendCodeMutation.isPending}
-              className="w-full text-center text-sm font-medium text-[#2D7A7F] transition hover:text-[#25696d] disabled:opacity-60"
+              className="w-full text-center text-sm font-medium text-primary-600 transition-brand hover:text-primary-700 disabled:opacity-60"
             >
               {sendCodeMutation.isPending ? 'Đang gửi lại...' : 'Gửi lại mã'}
             </button>
@@ -137,13 +137,13 @@ export const VerifyEmailPage = () => {
   return (
     <AccountActionLayout title="Xác minh Gmail" breadcrumbLabel="Xác minh email">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-950">Xác minh email</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <h1 className="text-2xl font-bold text-bone-950">Xác minh email</h1>
+        <p className="mt-2 text-sm leading-6 text-bone-600">
           Xác minh địa chỉ email giúp bảo vệ tài khoản và khôi phục mật khẩu khi cần.
         </p>
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
+      <section className="rounded-lg border border-bone-200 bg-white p-5">
         {renderBody()}
       </section>
     </AccountActionLayout>

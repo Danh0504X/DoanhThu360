@@ -80,7 +80,7 @@ export const RevenueEditPage = () => {
   const renderForm = (variant) => {
     if (isLoading) {
       return (
-        <div className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
+        <div className="rounded-lg border border-bone-200 bg-white px-6 py-12 text-center text-sm text-bone-500">
           Đang tải dữ liệu doanh thu...
         </div>
       );
@@ -110,23 +110,23 @@ export const RevenueEditPage = () => {
   return (
     <>
       {/* Mobile layout */}
-      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-2">
+      <div className="min-h-screen bg-bone-50 pb-20 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-bone-200 bg-white px-2">
           <button
             type="button"
             onClick={handleBack}
-            className="inline-flex h-10 items-center gap-1.5 rounded-md px-2 text-sm font-bold text-[#2D7A7F]"
+            className="inline-flex h-10 items-center gap-1.5 rounded-md px-2 text-sm font-bold text-primary-600 transition-brand hover:bg-bone-100"
             aria-label="Quay lại"
           >
             <Icon name="arrowLeft" className="h-5 w-5" />
             Quay lại
           </button>
-          <p className="text-sm font-bold text-[#2D7A7F]">Chỉnh sửa</p>
+          <p className="text-sm font-bold text-primary-600">Chỉnh sửa</p>
           <button
             type="button"
             onClick={() => setIsDeleteDialogOpen(true)}
             disabled={isLoading || Boolean(loadError)}
-            className="grid h-10 w-10 place-items-center text-red-500 disabled:opacity-40"
+            className="grid h-10 w-10 place-items-center rounded-sm text-red-500 transition-brand hover:bg-red-50 disabled:opacity-40"
             aria-label="Xóa bản ghi"
           >
             <Icon name="trash" className="h-5 w-5" />
@@ -134,8 +134,8 @@ export const RevenueEditPage = () => {
         </header>
 
         <main className="px-4 pt-5">
-          <h1 className="text-2xl font-bold text-slate-950">Chỉnh sửa bảng ghi</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-bone-950">Chỉnh sửa bảng ghi</h1>
+          <p className="mt-2 text-sm leading-6 text-bone-600">
             Cập nhật thông tin doanh thu đã ghi nhận trong hệ thống.
           </p>
 
@@ -151,16 +151,16 @@ export const RevenueEditPage = () => {
       >
         <div className="mx-auto max-w-[920px]">
           <div className="mb-6 flex items-center justify-between gap-4">
-            <nav className="flex items-center gap-3 text-xs font-bold text-slate-500">
-              <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+            <nav className="flex items-center gap-3 text-xs font-bold text-bone-500">
+              <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-primary-600">
                 Dashboard
               </button>
               <span>&gt;</span>
-              <button type="button" onClick={() => navigate('/revenues')} className="hover:text-[#2D7A7F]">
+              <button type="button" onClick={() => navigate('/revenues')} className="hover:text-primary-600">
                 Dòng tiền
               </button>
               <span>&gt;</span>
-              <span className="text-[#2D7A7F]">Chỉnh sửa</span>
+              <span className="text-primary-600">Chỉnh sửa</span>
             </nav>
 
             <div className="flex items-center gap-3">
@@ -168,7 +168,7 @@ export const RevenueEditPage = () => {
                 type="button"
                 onClick={() => setIsDeleteDialogOpen(true)}
                 disabled={isLoading || Boolean(loadError)}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-red-200 bg-white px-4 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-40"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-red-200 bg-white px-4 text-sm font-bold text-red-600 transition-brand hover:bg-red-50 disabled:opacity-40"
               >
                 <Icon name="trash" className="h-4 w-4" />
                 Xóa bản ghi
@@ -176,7 +176,7 @@ export const RevenueEditPage = () => {
               <button
                 type="button"
                 onClick={handleBack}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-bone-200 bg-white px-4 text-sm font-bold text-bone-600 transition-brand hover:bg-bone-50"
               >
                 <Icon name="arrowLeft" className="h-4 w-4" />
                 Quay lại

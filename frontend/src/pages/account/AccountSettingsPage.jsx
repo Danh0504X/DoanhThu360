@@ -11,21 +11,21 @@ const SecurityActionRow = ({ icon, title, description, badge, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-slate-50"
+    className="flex w-full items-center gap-4 px-5 py-4 text-left transition-brand hover:bg-bone-50"
   >
-    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-teal-50 text-[#2D7A7F]">
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-primary-50 text-primary-600">
       <Icon name={icon} className="h-5 w-5" />
     </span>
     <div className="min-w-0 flex-1">
-      <p className="text-sm font-bold text-slate-900">{title}</p>
-      <p className="mt-0.5 text-xs font-medium text-slate-500">{description}</p>
+      <p className="text-sm font-bold text-bone-900">{title}</p>
+      <p className="mt-0.5 text-xs font-medium text-bone-500">{description}</p>
     </div>
     {badge ? (
       <span className="shrink-0 rounded-md border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
         {badge}
       </span>
     ) : (
-      <Icon name="chevronRight" className="h-4 w-4 shrink-0 text-slate-400" />
+      <Icon name="chevronRight" className="h-4 w-4 shrink-0 text-bone-400" />
     )}
   </button>
 );
@@ -76,7 +76,7 @@ export const AccountSettingsPage = () => {
       {errorMessage ? <FormError message={errorMessage} className="rounded-md" /> : null}
 
       {profileQuery.isLoading ? (
-        <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm font-medium text-slate-500">
+        <section className="rounded-lg border border-bone-200 bg-white px-6 py-12 text-center text-sm font-medium text-bone-500">
           Đang tải thông tin tài khoản...
         </section>
       ) : (
@@ -87,14 +87,14 @@ export const AccountSettingsPage = () => {
             onSubmit={handleProfileSubmit}
           />
 
-          <section className="self-start rounded-lg border border-slate-200 bg-white">
-            <div className="border-b border-slate-200 px-5 py-5">
-              <h2 className="text-xl font-bold text-slate-900">Bảo mật</h2>
-              <p className="mt-1 text-sm font-medium text-slate-500">
+          <section className="self-start rounded-lg border border-bone-200 bg-white">
+            <div className="border-b border-bone-200 px-5 py-5">
+              <h2 className="text-xl font-bold text-bone-900">Bảo mật</h2>
+              <p className="mt-1 text-sm font-medium text-bone-500">
                 Quản lý mật khẩu và xác minh email của bạn.
               </p>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-bone-100">
               <SecurityActionRow
                 icon="shield"
                 title="Thay đổi mật khẩu"
@@ -121,8 +121,8 @@ export const AccountSettingsPage = () => {
         <MobileTopHeader title="Cá nhân" />
 
         <main className="px-4 pt-5">
-          <h1 className="text-2xl font-bold text-slate-950">Cài đặt tài khoản</h1>
-          <p className="mb-6 mt-2 text-sm leading-6 text-slate-600">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-bone-950">Cài đặt tài khoản</h1>
+          <p className="mb-6 mt-2 text-sm leading-6 text-bone-600">
             Quản lý thông tin cá nhân và thiết lập bảo mật.
           </p>
 
@@ -139,18 +139,18 @@ export const AccountSettingsPage = () => {
         desktopOnly
       >
         <div className="mx-auto max-w-[1180px]">
-          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-slate-500">
-            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-bone-500">
+            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-primary-600">
               Dashboard
             </button>
             <span>&gt;</span>
-            <span className="text-[#2D7A7F]">Tài khoản</span>
+            <span className="text-primary-600">Tài khoản</span>
           </nav>
 
-          <div className="mb-7 rounded-lg border border-slate-200 bg-white p-6">
-            <p className="text-xs font-bold uppercase text-[#2D7A7F]">Account Settings</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-normal text-slate-950">Cài đặt tài khoản</h1>
-            <p className="mt-2 text-sm font-medium text-slate-500">
+          <div className="mb-7 rounded-lg border border-bone-200 bg-white p-6">
+            <p className="text-xs font-bold uppercase text-primary-600">Account Settings</p>
+            <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-bone-950">Cài đặt tài khoản</h1>
+            <p className="mt-2 text-sm font-medium text-bone-500">
               Quản lý thông tin cá nhân và thiết lập bảo mật cho tài khoản của bạn.
             </p>
           </div>

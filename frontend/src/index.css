@@ -1,31 +1,72 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  /* Sans: system-native, geometric — Arial/Helvetica dropped (banned by the
+     minimalist-ui design directive as generic web defaults). */
+  --font-sans: "Segoe UI Variable", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  /* Serif: reserved for hero numbers/headings to create real typographic
+     contrast (editorial directive) — never used for body/UI text. */
+  --font-serif: "Iowan Old Style", "Palatino Linotype", "URW Palladio", ui-serif, Georgia, serif;
 
-  --color-teal-50: #f0fdfa;
-  --color-teal-100: #ccfbf1;
-  --color-teal-600: #0d9488;
-  --color-teal-700: #0f766e;
-  --color-teal-800: #115e59;
+  /* Primary brand scale — single source of truth (was split between
+     teal-700 and hardcoded #2D7A7F across the app). */
+  --color-primary-50: #f0f9f8;
+  --color-primary-100: #d9edec;
+  --color-primary-200: #b3dbd9;
+  --color-primary-500: #3a9298;
+  --color-primary-600: #2d7a7f;
+  --color-primary-700: #256267;
+  --color-primary-800: #1d4d51;
 
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
+  /* Warm neutral scale (minimalist-ui editorial tone) */
+  --color-bone-50: #faf9f7;
+  --color-bone-100: #f3f1ed;
+  --color-bone-200: #e7e3dc;
+  --color-bone-300: #d3cdc2;
+  --color-bone-400: #a89f92;
+  --color-bone-500: #8c8579;
+  --color-bone-600: #635d53;
+  --color-bone-700: #453f39;
+  --color-bone-800: #292520;
+  --color-bone-900: #1c1916;
+  --color-bone-950: #100e0c;
+
+  /* Pastel accents — reserved for badges/tags/status only */
+  --color-accent-emerald: #059669;
+  --color-accent-emerald-bg: #ecfdf5;
+  --color-accent-red: #dc2626;
+  --color-accent-red-bg: #fef2f2;
+  --color-accent-amber: #b45309;
+  --color-accent-amber-bg: #fffbeb;
 
   --color-emerald-600: #059669;
   --color-red-600: #dc2626;
+
+  /* Radius scale */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* Elevation scale — flat-first, only two non-zero levels */
+  --shadow-1: 0 1px 2px rgba(41, 37, 32, 0.06);
+  --shadow-2: 0 4px 16px rgba(41, 37, 32, 0.1);
+
+  /* Motion tokens */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+}
+
+@utility transition-brand {
+  transition-timing-function: var(--ease-out-expo);
+  transition-duration: var(--duration-base);
 }
 
 :root {
   font-family: var(--font-sans);
-  color: var(--color-slate-800);
-  background: var(--color-slate-50);
+  color: var(--color-bone-800);
+  background: var(--color-bone-50);
 }
 
 * {
@@ -39,10 +80,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  background:
-    radial-gradient(circle at top, rgba(15, 118, 110, 0.08), transparent 30%),
-    var(--color-slate-50);
-  color: var(--color-slate-800);
+  background: var(--color-bone-50);
+  color: var(--color-bone-800);
 }
 
 a {

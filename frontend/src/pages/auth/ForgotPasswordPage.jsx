@@ -51,7 +51,7 @@ export const ForgotPasswordPage = () => {
       illustration={heroImage}
       footer={(
         <div className="text-center">
-          <Link to="/login" className="text-sm font-medium text-teal-700 hover:text-teal-800">
+          <Link to="/login" className="text-sm font-medium text-primary-700 hover:text-primary-800">
             Quay lại đăng nhập
           </Link>
         </div>
@@ -59,8 +59,8 @@ export const ForgotPasswordPage = () => {
     >
       <AuthCard>
         <div className="mb-6 text-center">
-          <p className="text-xl font-semibold text-slate-800">Lấy lại quyền truy cập</p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="text-xl font-semibold text-bone-800">Lấy lại quyền truy cập</p>
+          <p className="mt-2 text-sm text-bone-500">
             Chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu đến email của bạn.
           </p>
         </div>

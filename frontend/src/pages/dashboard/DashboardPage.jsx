@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CashFlowCard } from '../../components/dashboard/CashFlowCard.jsx';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
 import { MobileDashboard } from '../../components/dashboard/MobileDashboard.jsx';
@@ -10,8 +9,11 @@ import { RevenueWordExportDialog } from '../../components/reports/RevenueWordExp
 import { RevenueDeleteDialog } from '../../components/revenues/RevenueDeleteDialog.jsx';
 import { RevenueDetailModal } from '../../components/revenues/RevenueDetailModal.jsx';
 import { useToast } from '../../components/ui/useToast.js';
+import { periodNouns, periodOptions, previousPeriodNouns } from '../../constants/period.js';
+import { Reveal } from '../../components/ui/Reveal.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
+import { useDashboardShell } from '../../hooks/useDashboardShell.js';
 import { useDeleteRevenue } from '../../hooks/useRevenues.js';
 import {
   useDashboardStats,
@@ -21,26 +23,6 @@ import {
 import { useExportRevenueWord } from '../../hooks/useExportRevenueWord.js';
 import { downloadBlob } from '../../utils/downloadBlob.js';
 import { getVietnamPreviousPeriodRange } from '../../utils/timezone.js';
-
-const periodOptions = [
-  { id: 'day', label: 'Ngày' },
-  { id: 'month', label: 'Tháng' },
-  { id: 'year', label: 'Năm' },
-];
-
-// Noun form used in headings, e.g. "Tổng doanh thu tháng này".
-const periodNouns = {
-  day: 'hôm nay',
-  month: 'tháng này',
-  year: 'năm nay',
-};
-
-// Previous-period noun used in the trend caption ("so với tháng trước").
-const previousPeriodNouns = {
-  day: 'hôm qua',
-  month: 'tháng trước',
-  year: 'năm trước',
-};
 
 // Compute the revenue trend vs the previous period.
 // `hasBaseline` is false when there's no previous data to compare against.
@@ -55,8 +37,6 @@ const getRevenueTrend = (current, previous) => {
   const percent = ((cur - prev) / prev) * 100;
   return { hasBaseline: true, isUp: percent >= 0, percent };
 };
-
-const unsupportedMessage = 'Chức năng này chưa được backend hỗ trợ.';
 
 const buildCashTransactions = (rows = []) =>
   rows
@@ -84,7 +64,7 @@ export const DashboardPage = () => {
   const [selectedRevenue, setSelectedRevenue] = useState(null);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState('');
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { navigate, handleNavigate, handleUnsupportedAction, unsupportedMessage } = useDashboardShell();
   const toast = useToast();
   const deleteRevenueMutation = useDeleteRevenue();
 
@@ -138,10 +118,6 @@ export const DashboardPage = () => {
   );
   const isTrendLoading = statsQuery.isLoading || previousStatsQuery.isLoading;
 
-  const handleUnsupportedAction = () => {
-    toast.info(unsupportedMessage);
-  };
-
   const handleDeleteConfirm = async () => {
     if (!selectedRevenue) return;
 
@@ -159,25 +135,6 @@ export const DashboardPage = () => {
     setDetailRevenue(null);
     setDeleteErrorMessage('');
     setSelectedRevenue(row);
-  };
-
-  const handleNavigate = (item) => {
-    if (item.id === 'dashboard') {
-      navigate('/dashboard');
-      return;
-    }
-
-    if (item.id === 'cash-flow') {
-      navigate('/revenues');
-      return;
-    }
-
-    if (item.to) {
-      navigate(item.to);
-      return;
-    }
-
-    handleUnsupportedAction();
   };
 
   const handleOpenExportDialog = () => {
@@ -248,18 +205,18 @@ export const DashboardPage = () => {
       >
         <div className="mx-auto max-w-[1180px]">
           <div className="mb-7 flex items-center justify-between gap-6">
-            <h1 className="text-4xl font-bold tracking-normal text-slate-950">Tổng quan doanh thu</h1>
+            <h1 className="font-serif text-4xl font-semibold tracking-tight text-bone-950">Tổng quan doanh thu</h1>
 
-            <div className="grid grid-cols-3 border border-slate-200 bg-white p-1">
+            <div className="grid grid-cols-3 border border-bone-200 bg-white p-1">
               {periodOptions.map((period) => (
                 <button
                   key={period.id}
                   type="button"
                   onClick={() => setSelectedPeriod(period.id)}
-                  className={`min-w-20 px-4 py-3 text-sm font-bold transition ${
+                  className={`min-w-20 px-4 py-3 text-sm font-bold transition-brand ${
                     selectedPeriod === period.id
-                      ? 'border border-slate-200 bg-white text-teal-800 shadow-sm'
-                      : 'text-slate-600 hover:text-teal-800'
+                      ? 'border border-bone-200 bg-white text-primary-800 shadow-sm'
+                      : 'text-bone-600 hover:text-primary-800'
                   }`}
                 >
                   {period.label}
@@ -268,7 +225,7 @@ export const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="grid gap-6 xl:grid-cols-[1.75fr_0.85fr]">
+          <Reveal className="grid gap-6 xl:grid-cols-[1.75fr_0.85fr]">
             <SummaryRevenueCard
               totalRevenue={stats.totalRevenue}
               periodLabel={periodNouns[selectedPeriod]}
@@ -280,36 +237,38 @@ export const DashboardPage = () => {
               error={errorMessage}
             />
             <QuickStatsCard orderCount={stats.count} isLoading={statsQuery.isLoading} />
-          </div>
+          </Reveal>
 
-          <section className="mt-7">
-            <h2 className="mb-5 text-3xl font-bold tracking-normal text-slate-950">Chi tiết dòng tiền</h2>
-            <div className="grid gap-6 xl:grid-cols-2">
-              <CashFlowCard
-                title="Tiền mặt"
-                icon="cash"
-                balance={stats.totalCash}
-                transactions={cashTransactions}
-                isLoading={isLoading}
-              />
-              <CashFlowCard
-                title="Tiền gửi tài khoản"
-                icon="bank"
-                balance={stats.totalBank}
-                transactions={bankTransactions}
-                isLoading={isLoading}
-              />
-            </div>
-          </section>
+          <Reveal delay={80} className="mt-7">
+            <section>
+              <h2 className="font-serif mb-5 text-3xl font-semibold tracking-tight text-bone-950">Chi tiết dòng tiền</h2>
+              <div className="grid gap-6 xl:grid-cols-2">
+                <CashFlowCard
+                  title="Tiền mặt"
+                  icon="cash"
+                  balance={stats.totalCash}
+                  transactions={cashTransactions}
+                  isLoading={isLoading}
+                />
+                <CashFlowCard
+                  title="Tiền gửi tài khoản"
+                  icon="bank"
+                  balance={stats.totalBank}
+                  transactions={bankTransactions}
+                  isLoading={isLoading}
+                />
+              </div>
+            </section>
+          </Reveal>
 
-          <div className="mt-7">
+          <Reveal delay={160} className="mt-7">
             <RecentActivitiesTable
               rows={recentRows}
               isLoading={recentRevenuesQuery.isLoading}
               onViewAll={() => navigate('/revenues')}
               onRowClick={(row) => setDetailRevenue(row)}
             />
-          </div>
+          </Reveal>
         </div>
       </DashboardLayout>
 

@@ -33,8 +33,8 @@ export const ToastProvider = ({ children }) => {
               toast.type === 'error'
                 ? 'border-red-200 bg-white text-red-700'
                 : toast.type === 'info'
-                  ? 'border-slate-200 bg-white text-slate-700'
-                  : 'border-teal-200 bg-white text-teal-800'
+                  ? 'border-bone-200 bg-white text-bone-700'
+                  : 'border-primary-200 bg-white text-primary-800'
             }`}
           >
             <div className="flex items-start justify-between gap-3">
@@ -42,7 +42,7 @@ export const ToastProvider = ({ children }) => {
               <button
                 type="button"
                 onClick={() => removeToast(toast.id)}
-                className="text-xs text-slate-400 transition hover:text-slate-600"
+                className="text-xs text-bone-400 transition-brand hover:text-bone-600"
               >
                 Đóng
               </button>

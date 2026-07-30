@@ -41,7 +41,7 @@ const MoreMenuItems = ({ onItemClick }) => {
           className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors ${
             item.danger
               ? 'text-red-600 hover:bg-red-50'
-              : 'text-slate-700 hover:bg-slate-50'
+              : 'text-bone-700 hover:bg-bone-50'
           }`}
         >
           <Icon name={item.icon} className="h-5 w-5" />
@@ -62,9 +62,9 @@ export const MobileMoreMenu = ({ isOpen, onClose }) => {
         onClick={onClose} 
         aria-hidden="true"
       />
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-slate-100 bg-white pb-6 pt-2 shadow-2xl transition-transform duration-200">
+      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl border-t border-bone-100 bg-white pb-6 pt-2 shadow-2xl transition-transform duration-200">
         <div className="mb-4 flex justify-center">
-          <div className="h-1.5 w-12 rounded-full bg-slate-200" />
+          <div className="h-1.5 w-12 rounded-full bg-bone-200" />
         </div>
         <div className="px-2">
           <MoreMenuItems onItemClick={onClose} />
@@ -99,7 +99,7 @@ export const DesktopMoreMenu = ({ isOpen, onClose }) => {
   return (
     <div 
       ref={ref}
-      className="absolute bottom-0 left-full z-50 ml-2 min-w-[220px] rounded-lg border border-slate-200 bg-white py-2 shadow-sm"
+      className="absolute bottom-0 left-full z-50 ml-2 min-w-[220px] rounded-lg border border-bone-200 bg-white py-2 shadow-sm"
       // Added onClick to stop propagation so clicking inside doesn't trigger the button click again if it bubbled
       onClick={(e) => e.stopPropagation()}
     >

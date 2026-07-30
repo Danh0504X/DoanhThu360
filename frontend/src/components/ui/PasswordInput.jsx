@@ -38,7 +38,7 @@ export const PasswordInput = forwardRef(({
   return (
     <div className={className}>
       {label ? (
-        <label htmlFor={props.id} className="mb-2 block text-xs font-bold uppercase text-slate-600">
+        <label htmlFor={props.id} className="mb-2 block text-xs font-bold uppercase text-bone-600">
           {label}
         </label>
       ) : null}
@@ -47,22 +47,22 @@ export const PasswordInput = forwardRef(({
           ref={ref}
           type={visible ? 'text' : 'password'}
           className={[
-            'h-12 w-full rounded-md border bg-slate-100 px-4 pr-12 text-sm font-semibold text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-[#2D7A7F] focus:bg-white focus:ring-2 focus:ring-teal-50',
-            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-100',
+            'h-12 w-full rounded-sm border bg-bone-100 px-4 pr-12 text-sm font-semibold text-bone-800 outline-none transition-brand placeholder:text-bone-500 focus:border-primary-600 focus:bg-white focus:ring-2 focus:ring-primary-100',
+            error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-bone-100',
           ].join(' ')}
           {...props}
         />
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
-          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 hover:text-slate-600"
+          className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-bone-500 hover:text-bone-700"
           aria-label={visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
         >
           <EyeIcon open={visible} />
         </button>
       </div>
-      {hint && !error ? <p className="mt-2 text-xs font-medium text-slate-500">{hint}</p> : null}
-      {error ? <p className="mt-2 text-sm font-semibold text-red-600">{error}</p> : null}
+      {hint && !error ? <p className="mt-2 text-xs font-medium text-bone-500">{hint}</p> : null}
+      {error ? <p className="mt-2 text-sm font-semibold text-accent-red">{error}</p> : null}
     </div>
   );
 });

@@ -82,21 +82,21 @@ export const RevenueCreatePage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
-        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+      <div className="min-h-screen bg-bone-50 pb-20 lg:hidden">
+        <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-bone-200 bg-white px-4">
           <button
             type="button"
             onClick={handleCancel}
-            className="grid h-10 w-10 place-items-center text-[#2D7A7F]"
+            className="grid h-10 w-10 place-items-center rounded-sm text-primary-600 transition-brand hover:bg-bone-100"
             aria-label="Quay lại"
           >
             <Icon name="arrowLeft" className="h-5 w-5" />
           </button>
-          <p className="text-sm font-bold text-[#2D7A7F]">Thêm mới bảng ghi</p>
+          <p className="text-sm font-bold text-primary-600">Thêm mới bảng ghi</p>
           <button
             type="button"
             onClick={handleUnsupportedAction}
-            className="grid h-10 w-10 place-items-center text-slate-500"
+            className="grid h-10 w-10 place-items-center rounded-sm text-bone-500 transition-brand hover:bg-bone-100"
             aria-label="Menu"
           >
             <Icon name="menu" className="h-5 w-5" />
@@ -104,8 +104,8 @@ export const RevenueCreatePage = () => {
         </header>
 
         <main className="px-4 pt-5">
-          <h1 className="text-2xl font-bold text-slate-950">Chi tiết giao dịch</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
+          <h1 className="font-serif text-2xl font-semibold tracking-tight text-bone-950">Chi tiết giao dịch</h1>
+          <p className="mt-2 text-sm leading-6 text-bone-600">
             Nhập thông tin doanh thu thực tế để cập nhật hệ thống báo cáo.
           </p>
 
@@ -134,16 +134,16 @@ export const RevenueCreatePage = () => {
         desktopOnly
       >
         <div className="mx-auto max-w-[920px]">
-          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-slate-500">
-            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
+          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-bone-500">
+            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-primary-600">
               Dashboard
             </button>
             <span>&gt;</span>
-            <button type="button" onClick={() => navigate('/revenues')} className="hover:text-[#2D7A7F]">
+            <button type="button" onClick={() => navigate('/revenues')} className="hover:text-primary-600">
               Dòng tiền
             </button>
             <span>&gt;</span>
-            <span className="text-[#2D7A7F]">Thêm mới bảng ghi</span>
+            <span className="text-primary-600">Thêm mới bảng ghi</span>
           </nav>
 
           <RevenueRecordCreateForm

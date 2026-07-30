@@ -36,7 +36,7 @@ export const MobileBottomNav = () => {
   const active = resolveActive(pathname);
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_12px_rgba(15,23,42,0.06)] backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-bone-200 bg-white px-1 pb-[env(safe-area-inset-bottom)] shadow-1 lg:hidden">
       {TABS.map((tab) => {
         const isActive = active === tab.id;
 
@@ -46,16 +46,16 @@ export const MobileBottomNav = () => {
             type="button"
             onClick={() => navigate(tab.to)}
             aria-current={isActive ? 'page' : undefined}
-            className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-colors duration-150 ${
-              isActive ? 'text-teal-700' : 'text-slate-400 active:text-teal-700'
+            className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold transition-brand ${
+              isActive ? 'text-primary-700' : 'text-bone-500 active:text-primary-700'
             }`}
           >
             <span
-              className={`absolute top-0 h-0.5 w-8 rounded-full bg-teal-600 transition-opacity duration-200 ${
+              className={`absolute top-0 h-0.5 w-8 rounded-full bg-primary-600 transition-brand ${
                 isActive ? 'opacity-100' : 'opacity-0'
               }`}
             />
-            <Icon name={tab.icon} className={`h-5 w-5 transition-transform duration-150 ${isActive ? '-translate-y-0.5' : ''}`} />
+            <Icon name={tab.icon} className={`h-5 w-5 transition-brand ${isActive ? '-translate-y-0.5' : ''}`} />
             <span>{tab.label}</span>
           </button>
         );

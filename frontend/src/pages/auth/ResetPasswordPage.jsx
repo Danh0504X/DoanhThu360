@@ -57,7 +57,7 @@ export const ResetPasswordPage = () => {
       illustration={heroImage}
       footer={(
         <div className="text-center">
-          <Link to="/login" className="text-sm font-medium text-teal-700 hover:text-teal-800">
+          <Link to="/login" className="text-sm font-medium text-primary-700 hover:text-primary-800">
             Quay lại đăng nhập
           </Link>
         </div>
@@ -65,8 +65,8 @@ export const ResetPasswordPage = () => {
     >
       <AuthCard>
         <div className="mb-6 text-center">
-          <p className="text-xl font-semibold text-slate-800">Thiết lập mật khẩu mới</p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="text-xl font-semibold text-bone-800">Thiết lập mật khẩu mới</p>
+          <p className="mt-2 text-sm text-bone-500">
             Chúng tôi đã gửi mã gồm 6 chữ số tới email của bạn. Nhập mã đó cùng mật khẩu mới.
           </p>
         </div>
@@ -123,9 +123,9 @@ export const ResetPasswordPage = () => {
             Cập nhật mật khẩu
           </Button>
 
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-bone-500">
             Chưa nhận được mã?{' '}
-            <Link to="/forgot-password" className="font-medium text-teal-700 hover:text-teal-800">
+            <Link to="/forgot-password" className="font-medium text-primary-700 hover:text-primary-800">
               Gửi lại
             </Link>
           </p>

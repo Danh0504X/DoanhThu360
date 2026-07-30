@@ -38,16 +38,16 @@ export const MobileTopHeader = ({ title }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-bone-200 bg-white px-4 lg:hidden">
       {/* Left: logo placeholder */}
       <div className="flex items-center gap-2">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-teal-700 text-sm font-bold text-white">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary-700 text-sm font-bold text-white">
           DT
         </span>
       </div>
 
       {/* Center: title */}
-      <p className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold text-slate-900">
+      <p className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-base font-bold text-bone-900">
         {title}
       </p>
 
@@ -56,7 +56,7 @@ export const MobileTopHeader = ({ title }) => {
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}
-          className="grid h-10 w-10 place-items-center text-slate-600 transition hover:text-teal-800"
+          className="grid h-10 w-10 place-items-center text-bone-600 transition-brand hover:text-primary-800"
           aria-label="Cài đặt"
           aria-expanded={isOpen}
         >
@@ -64,14 +64,14 @@ export const MobileTopHeader = ({ title }) => {
         </button>
 
         {isOpen ? (
-          <div className="absolute right-0 top-full mt-1 w-44 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-xl shadow-slate-900/10">
+          <div className="absolute right-0 top-full mt-1 w-44 overflow-hidden rounded-lg border border-bone-200 bg-white py-1 shadow-xl shadow-bone-900/10">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
                 navigate('/account');
               }}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-bone-700 transition-brand hover:bg-bone-50"
             >
               <Icon name="user" className="h-4 w-4" />
               Cá nhân
@@ -79,7 +79,7 @@ export const MobileTopHeader = ({ title }) => {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-red-600 transition hover:bg-red-50"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-red-600 transition-brand hover:bg-red-50"
             >
               <Icon name="logout" className="h-4 w-4" />
               Đăng xuất

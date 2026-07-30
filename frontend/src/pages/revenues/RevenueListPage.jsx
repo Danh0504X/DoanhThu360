@@ -1,20 +1,23 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
+import { Icon } from '../../components/dashboard/DashboardIcons.jsx';
 import { MobileTopHeader } from '../../components/dashboard/MobileTopHeader.jsx';
 import { RevenueWordExportDialog } from '../../components/reports/RevenueWordExportDialog.jsx';
 import { RevenueDeleteDialog } from '../../components/revenues/RevenueDeleteDialog.jsx';
 import { RevenueDetailModal } from '../../components/revenues/RevenueDetailModal.jsx';
 import { RevenueFilters } from '../../components/revenues/RevenueFilters.jsx';
+import { RevenueSummaryCards } from '../../components/revenues/RevenueSummaryCards.jsx';
 import { RevenueTable } from '../../components/revenues/RevenueTable.jsx';
 import { Button } from '../../components/ui/Button.jsx';
+import { Card } from '../../components/ui/Card.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
 import { FormSuccess } from '../../components/ui/FormSuccess.jsx';
 import { useToast } from '../../components/ui/useToast.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useBusinesses } from '../../hooks/useBusinesses.js';
 import { useExportRevenueWord } from '../../hooks/useExportRevenueWord.js';
-import { useDeleteRevenue, useRevenues } from '../../hooks/useRevenues.js';
+import { useDeleteRevenue, useRevenues, useRevenueSummary } from '../../hooks/useRevenues.js';
 import { downloadBlob } from '../../utils/downloadBlob.js';
 import { toDateInputValue } from '../../utils/formatDate.js';
 import { getVietnamWeekStart } from '../../utils/timezone.js';
@@ -91,6 +94,7 @@ export const RevenueListPage = () => {
   );
 
   const revenuesQuery = useRevenues(queryParams);
+  const revenueSummaryQuery = useRevenueSummary(queryParams);
   const deleteRevenueMutation = useDeleteRevenue();
   const exportRevenueWordMutation = useExportRevenueWord();
 
@@ -193,6 +197,12 @@ export const RevenueListPage = () => {
       <FormSuccess message={successMessage} />
       {errorMessage ? <FormError message={errorMessage} /> : null}
 
+      <RevenueSummaryCards
+        summary={revenueSummaryQuery.data}
+        isLoading={revenueSummaryQuery.isLoading}
+        periodLabel={periodLabel}
+      />
+
       <RevenueFilters
         filters={{ ...filters, businessId: effectiveBusinessId }}
         onChange={handleFilterChange}
@@ -202,9 +212,9 @@ export const RevenueListPage = () => {
       />
 
       {revenuesQuery.isLoading ? (
-        <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
+        <Card className="px-6 py-12 text-center text-sm text-bone-500">
           Đang tải dữ liệu...
-        </section>
+        </Card>
       ) : filteredRows.length ? (
         <RevenueTable
           title={listTitle}
@@ -215,10 +225,10 @@ export const RevenueListPage = () => {
           onRowClick={(row) => setDetailRevenue(row)}
         />
       ) : (
-        <section className="rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
+        <Card className="px-6 py-12 text-center text-sm text-bone-500">
           {listTitle}
           <p className="mt-2">Chưa có dữ liệu doanh thu.</p>
-        </section>
+        </Card>
       )}
     </>
   );
@@ -226,35 +236,21 @@ export const RevenueListPage = () => {
   return (
     <>
       {/* Mobile layout */}
-      <div className="min-h-screen bg-slate-50 pb-24 lg:hidden">
+      <div className="min-h-screen bg-bone-50 pb-24 lg:hidden">
         <MobileTopHeader title="Doanh thu" />
 
         <main className="space-y-4 px-4 pt-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h1 className="text-xl font-bold text-slate-900">Danh sách doanh thu</h1>
-            <p className="mt-1 text-sm leading-6 text-slate-500">
-              Quản lý và theo dõi các khoản thu nhập của hộ kinh doanh.
-            </p>
-            <div className="mt-4 flex gap-2">
-              <button
-                type="button"
-                onClick={() => navigate('/revenues/create')}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-md bg-teal-700 text-sm font-bold text-white transition active:bg-teal-800"
-              >
-                + Thêm doanh thu
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenExportDialog}
-                className="inline-flex h-11 flex-1 items-center justify-center rounded-md border border-slate-200 bg-white text-sm font-bold text-slate-700 transition active:bg-slate-50"
-              >
-                Xuất Word
-              </button>
-            </div>
-          </div>
-
           {renderContent()}
         </main>
+
+        <button
+          type="button"
+          onClick={() => navigate('/revenues/create')}
+          className="fixed bottom-24 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-primary-700 text-white shadow-2 transition-brand hover:scale-[1.04] hover:bg-primary-800 active:scale-[0.95]"
+          aria-label="Thêm doanh thu"
+        >
+          <Icon name="plus" className="h-7 w-7" />
+        </button>
       </div>
 
       {/* Desktop layout */}
@@ -267,27 +263,18 @@ export const RevenueListPage = () => {
         activeNav="cash-flow"
         desktopOnly
       >
-        <section className="rounded-lg border border-slate-200 bg-white px-5 py-5 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-800">Danh sách doanh thu</h1>
-              <p className="mt-2 text-sm text-slate-500">
-                Quản lý và theo dõi các khoản thu nhập của hộ kinh doanh.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Button type="button" variant="secondary" size="lg" onClick={handleOpenExportDialog}>
-                Xuất Word
-              </Button>
-              <Button type="button" size="lg" onClick={() => navigate('/revenues/create')}>
-                Thêm doanh thu
-              </Button>
-            </div>
+        <div className="space-y-6">
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={handleOpenExportDialog}>
+              Xuất Word
+            </Button>
+            <Button type="button" onClick={() => navigate('/revenues/create')}>
+              Thêm doanh thu
+            </Button>
           </div>
-        </section>
 
-        {renderContent()}
+          {renderContent()}
+        </div>
       </DashboardLayout>
 
       <RevenueDetailModal

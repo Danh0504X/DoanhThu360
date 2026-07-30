@@ -41,29 +41,29 @@ export const NotificationBell = ({ triggerClassName = '', items = [] }) => {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
-          <div className="border-b border-slate-100 px-4 py-3">
-            <p className="text-sm font-bold text-slate-800">Thông báo</p>
+        <div className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-lg border border-bone-200 bg-white shadow-xl shadow-bone-900/10">
+          <div className="border-b border-bone-100 px-4 py-3">
+            <p className="text-sm font-bold text-bone-800">Thông báo</p>
           </div>
 
           {items.length ? (
-            <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto">
+            <ul className="max-h-72 divide-y divide-bone-100 overflow-y-auto">
               {items.map((item) => (
                 <li key={item.id} className="px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-800">{item.title}</p>
+                  <p className="text-sm font-semibold text-bone-800">{item.title}</p>
                   {item.description ? (
-                    <p className="mt-0.5 text-xs text-slate-500">{item.description}</p>
+                    <p className="mt-0.5 text-xs text-bone-500">{item.description}</p>
                   ) : null}
                 </li>
               ))}
             </ul>
           ) : (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-slate-400">
+              <span className="grid h-12 w-12 place-items-center rounded-full bg-bone-100 text-bone-400">
                 <Icon name="bell" className="h-6 w-6" />
               </span>
-              <p className="text-sm font-medium text-slate-600">Chưa có thông báo mới</p>
-              <p className="text-xs text-slate-400">
+              <p className="text-sm font-medium text-bone-600">Chưa có thông báo mới</p>
+              <p className="text-xs text-bone-400">
                 Các cập nhật về doanh thu và tài khoản sẽ xuất hiện ở đây.
               </p>
             </div>

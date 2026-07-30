@@ -1,3 +1,5 @@
+import { Card } from '../ui/Card.jsx';
+import { Skeleton } from '../ui/Skeleton.jsx';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 
 export const SummaryRevenueCard = ({
@@ -15,57 +17,57 @@ export const SummaryRevenueCard = ({
   const visibleBars = chartData.slice(-7);
 
   return (
-    <section className="border border-slate-200 bg-white p-7">
+    <Card padding="lg">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.08em] text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-bone-500">
             Tổng doanh thu{periodLabel ? ` ${periodLabel}` : ''}
           </p>
           {isLoading ? (
-            <div className="mt-6 h-12 w-72 animate-pulse bg-slate-100" />
+            <Skeleton className="mt-6 h-12 w-72" />
           ) : error ? (
-            <p className="mt-6 text-sm font-semibold text-red-600">{error}</p>
+            <p className="mt-6 text-sm font-semibold text-accent-red">{error}</p>
           ) : (
             <div className="mt-5 flex flex-wrap items-end gap-3">
-              <strong className="text-5xl font-bold leading-none tracking-normal text-teal-800">
+              <strong className="font-serif text-5xl font-semibold leading-none tracking-tight text-primary-800">
                 {formatCurrency(totalRevenue).replace(' VND', '')}
               </strong>
-              <span className="pb-1 text-2xl font-normal text-slate-400">VNĐ</span>
+              <span className="pb-1 text-2xl font-normal text-bone-500">VNĐ</span>
             </div>
           )}
 
           {!isLoading && !error && !isTrendLoading ? (
             revenueTrend.hasBaseline ? (
-              <p className={`mt-3 text-sm font-semibold ${revenueTrend.isUp ? 'text-teal-700' : 'text-red-600'}`}>
+              <p className={`mt-3 text-sm font-semibold ${revenueTrend.isUp ? 'text-primary-700' : 'text-accent-red'}`}>
                 {revenueTrend.isUp ? '↗' : '↘'} {revenueTrend.isUp ? '+' : ''}{revenueTrend.percent.toFixed(1)}% so với {previousPeriodLabel}
               </p>
             ) : (
-              <p className="mt-3 text-sm font-medium text-slate-400">Chưa có dữ liệu {previousPeriodLabel}</p>
+              <p className="mt-3 text-sm font-medium text-bone-500">Chưa có dữ liệu {previousPeriodLabel}</p>
             )
           ) : null}
         </div>
 
         {isTrendLoading ? (
-          <span className="h-8 w-20 animate-pulse rounded bg-slate-100" />
+          <Skeleton className="h-8 w-20" />
         ) : revenueTrend.hasBaseline ? (
           <span
-            className={`px-3 py-2 text-xs font-bold ${
-              revenueTrend.isUp ? 'bg-teal-50 text-teal-800' : 'bg-red-50 text-red-600'
+            className={`rounded-sm px-3 py-2 text-xs font-bold ${
+              revenueTrend.isUp ? 'bg-primary-50 text-primary-800' : 'bg-accent-red-bg text-accent-red'
             }`}
             title={`So với ${previousPeriodLabel}`}
           >
             {revenueTrend.isUp ? '▲' : '▼'} {revenueTrend.isUp ? '+' : ''}{revenueTrend.percent.toFixed(1)}%
           </span>
         ) : (
-          <span className="bg-slate-100 px-3 py-2 text-xs font-bold text-slate-400">--</span>
+          <span className="rounded-sm bg-bone-100 px-3 py-2 text-xs font-bold text-bone-500">--</span>
         )}
       </div>
 
-      <div className="mt-12 h-44 border-b border-slate-200">
+      <div className="mt-12 h-44 border-b border-bone-200">
         {isLoading ? (
           <div className="flex h-full items-end gap-6">
             {[36, 58, 42, 74, 52, 86, 100].map((height) => (
-              <div key={height} className="flex-1 animate-pulse bg-slate-100" style={{ height: `${height}%` }} />
+              <Skeleton key={height} className="flex-1" style={{ height: `${height}%` }} />
             ))}
           </div>
         ) : hasChartData ? (
@@ -77,7 +79,7 @@ export const SummaryRevenueCard = ({
               return (
                 <div
                   key={`${item.label}-${index}`}
-                  className={`flex-1 ${isStrong ? 'bg-teal-800' : 'bg-teal-100'}`}
+                  className={`flex-1 rounded-t-sm ${isStrong ? 'bg-primary-800' : 'bg-primary-100'}`}
                   style={{ height: `${height}%` }}
                   title={`${item.label}: ${formatCurrency(item.revenue)}`}
                 />
@@ -85,11 +87,11 @@ export const SummaryRevenueCard = ({
             })}
           </div>
         ) : (
-          <div className="flex h-full items-center justify-center bg-slate-50 text-sm font-medium text-slate-500">
+          <div className="flex h-full items-center justify-center rounded-sm bg-bone-50 text-sm font-medium text-bone-500">
             Chưa có dữ liệu biểu đồ
           </div>
         )}
       </div>
-    </section>
+    </Card>
   );
 };

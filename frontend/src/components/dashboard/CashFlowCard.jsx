@@ -1,4 +1,6 @@
 import { Icon } from './DashboardIcons.jsx';
+import { Card } from '../ui/Card.jsx';
+import { Skeleton } from '../ui/Skeleton.jsx';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 
 const formatSignedCurrency = (value) => {
@@ -9,31 +11,31 @@ const formatSignedCurrency = (value) => {
 };
 
 export const CashFlowCard = ({ title, icon, balance = 0, transactions = [], isLoading }) => (
-  <section className="border border-slate-200 bg-white p-7">
+  <Card padding="lg">
     <div className="flex items-center gap-3">
-      <Icon name={icon} className="h-5 w-5 text-teal-800" />
-      <h3 className="text-lg font-bold text-slate-950">{title}</h3>
+      <Icon name={icon} className="h-5 w-5 text-primary-800" />
+      <h3 className="text-lg font-bold text-bone-800">{title}</h3>
     </div>
 
     <div className="mt-5">
-      <p className="text-sm font-medium text-slate-500">Số dư hiện tại</p>
+      <p className="text-sm font-medium text-bone-500">Số dư hiện tại</p>
       {isLoading ? (
-        <div className="mt-2 h-9 w-56 animate-pulse bg-slate-100" />
+        <Skeleton className="mt-2 h-9 w-56" />
       ) : (
-        <p className="mt-1 text-4xl font-bold tracking-normal text-slate-950">
+        <p className="mt-1 font-serif text-4xl font-semibold tracking-tight text-bone-800">
           {formatCurrency(balance).replace(' VND', '')}
-          <span className="ml-2 text-sm font-medium text-teal-800">đ</span>
+          <span className="ml-2 text-sm font-medium text-primary-800">đ</span>
         </p>
       )}
     </div>
 
-    <div className="mt-8 border border-slate-200 bg-slate-50 px-5 py-4">
-      <p className="text-xs font-semibold text-slate-500">Giao dịch gần nhất</p>
+    <Card inset padding="sm" className="mt-8">
+      <p className="text-xs font-semibold text-bone-500">Giao dịch gần nhất</p>
 
       {isLoading ? (
         <div className="mt-4 space-y-3">
-          <div className="h-4 animate-pulse bg-slate-200" />
-          <div className="h-4 w-5/6 animate-pulse bg-slate-200" />
+          <Skeleton className="h-4" />
+          <Skeleton className="h-4 w-5/6" />
         </div>
       ) : transactions.length ? (
         <div className="mt-4 space-y-3">
@@ -42,8 +44,8 @@ export const CashFlowCard = ({ title, icon, balance = 0, transactions = [], isLo
 
             return (
               <div key={item.id} className="flex items-center justify-between gap-4 text-sm">
-                <span className="min-w-0 truncate font-medium text-slate-700">{item.content || 'Không có mô tả'}</span>
-                <span className={`shrink-0 font-bold ${amount < 0 ? 'text-red-600' : 'text-teal-800'}`}>
+                <span className="min-w-0 truncate font-medium text-bone-700">{item.content || 'Không có mô tả'}</span>
+                <span className={`shrink-0 font-bold ${amount < 0 ? 'text-accent-red' : 'text-primary-800'}`}>
                   {formatSignedCurrency(amount)}
                 </span>
               </div>
@@ -51,8 +53,8 @@ export const CashFlowCard = ({ title, icon, balance = 0, transactions = [], isLo
           })}
         </div>
       ) : (
-        <p className="mt-4 text-sm font-medium text-slate-500">Chưa có dữ liệu</p>
+        <p className="mt-4 text-sm font-medium text-bone-500">Chưa có dữ liệu</p>
       )}
-    </div>
-  </section>
+    </Card>
+  </Card>
 );

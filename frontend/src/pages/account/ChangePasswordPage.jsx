@@ -23,8 +23,8 @@ export const ChangePasswordPage = () => {
   return (
     <AccountActionLayout title="Đổi mật khẩu" breadcrumbLabel="Đổi mật khẩu">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-950">Thay đổi mật khẩu</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
+        <h1 className="text-2xl font-bold text-bone-950">Thay đổi mật khẩu</h1>
+        <p className="mt-2 text-sm leading-6 text-bone-600">
           Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật thông tin đăng nhập.
         </p>
       </div>

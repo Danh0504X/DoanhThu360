@@ -10,21 +10,21 @@ export const TextInput = forwardRef(({
 }, ref) => (
   <div className={className}>
     {label ? (
-      <label htmlFor={props.id} className="mb-2 block text-sm font-medium text-slate-700">
+      <label htmlFor={props.id} className="mb-2 block text-sm font-medium text-bone-700">
         {label}
       </label>
     ) : null}
     <input
       ref={ref}
       className={[
-        'h-12 w-full rounded-xl border bg-white px-4 text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100',
-        error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-slate-200',
+        'h-12 w-full rounded-sm border bg-white px-4 text-bone-800 outline-none transition-brand placeholder:text-bone-500 focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
+        error ? 'border-red-300 focus:border-red-400 focus:ring-red-100' : 'border-bone-200',
         inputClassName,
       ].join(' ')}
       {...props}
     />
-    {hint && !error ? <p className="mt-2 text-xs text-slate-500">{hint}</p> : null}
-    {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
+    {hint && !error ? <p className="mt-2 text-xs text-bone-500">{hint}</p> : null}
+    {error ? <p className="mt-2 text-sm text-accent-red">{error}</p> : null}
   </div>
 ));
 

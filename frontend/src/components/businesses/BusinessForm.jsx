@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { businessSchema } from '../../schemas/businessSchema.js';
+import { businessSchema } from '../../schemas/business.schema.js';
 import { Button } from '../ui/Button.jsx';
+import { Card } from '../ui/Card.jsx';
 import { FormError } from '../ui/FormError.jsx';
+import { Icon } from '../dashboard/DashboardIcons.jsx';
 import { TextInput } from '../ui/TextInput.jsx';
 
 export const BusinessForm = ({
@@ -17,7 +19,6 @@ export const BusinessForm = ({
   const initialValues = useMemo(() => ({
     name: defaultValues?.name || defaultValues?.businessName || '',
     taxCode: defaultValues?.taxCode || '',
-
     address: defaultValues?.address || '',
     phone: defaultValues?.phone || '',
     email: defaultValues?.email || '',
@@ -38,42 +39,45 @@ export const BusinessForm = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <FormError message={errorMessage} />
 
-      <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex items-start gap-3 rounded-md border border-primary-100 bg-primary-50 px-4 py-3">
+        <Icon name="shield" className="mt-0.5 h-5 w-5 shrink-0 text-primary-700" />
+        <p className="text-sm leading-6 text-primary-800">
+          <strong>Tên, mã số thuế và địa chỉ là bắt buộc</strong> — hệ thống cần đủ 3 thông tin này để tổng hợp và xuất báo cáo thuế chính xác sau này.
+        </p>
+      </div>
+
+      <Card padding="lg">
+        <div className="grid gap-5 md:grid-cols-2">
           <TextInput
             id="name"
-            label="Tên hộ kinh doanh"
+            label="Tên hộ kinh doanh *"
             placeholder="Nhập tên hộ kinh doanh"
             {...register('name')}
             error={errors.name?.message}
           />
           <TextInput
             id="taxCode"
-            label="Mã số thuế"
-            placeholder="Nhập mã số thuế"
+            label="Mã số thuế *"
+            placeholder="VD: 0312345678"
             {...register('taxCode')}
             error={errors.taxCode?.message}
           />
+        </div>
 
+        <div className="mt-5">
+          <TextInput
+            id="address"
+            label="Địa chỉ *"
+            placeholder="Nhập địa chỉ kinh doanh"
+            {...register('address')}
+            error={errors.address?.message}
+          />
+        </div>
 
-
-          <div>
-            <label htmlFor="status" className="mb-2 block text-sm font-medium text-slate-700">
-              Trạng thái
-            </label>
-            <select
-              id="status"
-              {...register('status')}
-              className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-slate-800 outline-none transition-colors focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
-            >
-              <option value="active">Đang hoạt động</option>
-              <option value="inactive">Ngừng hoạt động</option>
-            </select>
-          </div>
-
+        <div className="mt-6 grid gap-5 border-t border-bone-100 pt-5 md:grid-cols-2">
           <TextInput
             id="phone"
-            label="Số điện thoại"
+            label="Số điện thoại (tùy chọn)"
             placeholder="0987 654 321"
             {...register('phone')}
             error={errors.phone?.message}
@@ -81,36 +85,26 @@ export const BusinessForm = ({
           <TextInput
             id="email"
             type="email"
-            label="Email"
+            label="Email (tùy chọn)"
             placeholder="example@domain.com"
             {...register('email')}
             error={errors.email?.message}
           />
         </div>
 
-        <div className="mt-4">
-          <TextInput
-            id="address"
-            label="Địa chỉ"
-            placeholder="Nhập địa chỉ kinh doanh"
-            {...register('address')}
-            error={errors.address?.message}
-          />
-        </div>
-
-        <div className="mt-4">
-          <label htmlFor="note" className="mb-2 block text-sm font-medium text-slate-700">
-            Ghi chú
+        <div className="mt-5">
+          <label htmlFor="note" className="mb-2 block text-sm font-medium text-bone-700">
+            Ghi chú (tùy chọn)
           </label>
           <textarea
             id="note"
-            rows="4"
+            rows="3"
             placeholder="Thông tin bổ sung về hộ kinh doanh"
             {...register('note')}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-100"
+            className="w-full resize-none rounded-sm border border-bone-200 bg-white px-4 py-3 text-bone-800 outline-none transition-brand placeholder:text-bone-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
           />
         </div>
-      </section>
+      </Card>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" onClick={onCancel}>

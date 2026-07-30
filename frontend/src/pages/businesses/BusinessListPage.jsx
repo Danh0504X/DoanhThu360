@@ -1,17 +1,32 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { BusinessDeleteDialog } from '../../components/businesses/BusinessDeleteDialog.jsx';
 import { BusinessFilters } from '../../components/businesses/BusinessFilters.jsx';
 import { BusinessTable } from '../../components/businesses/BusinessTable.jsx';
 import { DashboardLayout } from '../../components/dashboard/DashboardLayout.jsx';
+import { Icon } from '../../components/dashboard/DashboardIcons.jsx';
 import { MobileTopHeader } from '../../components/dashboard/MobileTopHeader.jsx';
+import { Button } from '../../components/ui/Button.jsx';
+import { Card } from '../../components/ui/Card.jsx';
 import { FormError } from '../../components/ui/FormError.jsx';
+import { Skeleton } from '../../components/ui/Skeleton.jsx';
 import { useToast } from '../../components/ui/useToast.js';
 import { useBusinesses, useChangeBusinessStatus } from '../../hooks/useBusinesses.js';
+import { useDashboardShell } from '../../hooks/useDashboardShell.js';
 import { useDebouncedValue } from '../../hooks/useDebouncedValue.js';
 
+const StatChip = ({ label, value, isLoading, tone = 'text-bone-800' }) => (
+  <div className="min-w-[104px] flex-1 rounded-sm bg-bone-100 px-4 py-3">
+    <p className="text-[10.5px] font-bold uppercase tracking-wide text-bone-500">{label}</p>
+    {isLoading ? (
+      <Skeleton className="mt-2 h-6 w-10" />
+    ) : (
+      <p className={`mt-1 font-serif text-xl font-semibold ${tone}`}>{value}</p>
+    )}
+  </div>
+);
+
 export const BusinessListPage = () => {
-  const navigate = useNavigate();
+  const { navigate, handleNavigate, handleUnsupportedAction } = useDashboardShell();
   const toast = useToast();
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [filters, setFilters] = useState({
@@ -34,35 +49,19 @@ export const BusinessListPage = () => {
   const businessesQuery = useBusinesses(queryParams);
   const changeStatusMutation = useChangeBusinessStatus();
 
+  // Lightweight count-only queries (limit=1, we only read pagination.total) to
+  // power the stats strip regardless of whatever status filter is active.
+  const totalCountQuery = useBusinesses({ status: 'all', limit: 1 });
+  const activeCountQuery = useBusinesses({ status: 'active', limit: 1 });
+  const inactiveCountQuery = useBusinesses({ status: 'inactive', limit: 1 });
+  const isCountsLoading = totalCountQuery.isLoading || activeCountQuery.isLoading || inactiveCountQuery.isLoading;
+
   const handleFilterChange = (field, value) => {
     setFilters((currentFilters) => ({
       ...currentFilters,
       [field]: value,
       page: field === 'page' ? value : 1,
     }));
-  };
-
-  const handleUnsupportedAction = () => {
-    toast.info('Chức năng này chưa được backend hỗ trợ.');
-  };
-
-  const handleNavigate = (item) => {
-    if (item.id === 'dashboard') {
-      navigate('/dashboard');
-      return;
-    }
-
-    if (item.id === 'cash-flow') {
-      navigate('/revenues');
-      return;
-    }
-
-    if (item.to) {
-      navigate(item.to);
-      return;
-    }
-
-    handleUnsupportedAction();
   };
 
   const handleStatusConfirm = async () => {
@@ -84,56 +83,64 @@ export const BusinessListPage = () => {
 
   const renderBusinessContent = () => (
     <>
+      <Card padding="lg" className="flex gap-3">
+        <StatChip label="Tổng số" value={totalCountQuery.data?.pagination?.total ?? 0} isLoading={isCountsLoading} />
+        <StatChip
+          label="Đang hoạt động"
+          value={activeCountQuery.data?.pagination?.total ?? 0}
+          isLoading={isCountsLoading}
+          tone="text-emerald-600"
+        />
+        <StatChip
+          label="Ngừng hoạt động"
+          value={inactiveCountQuery.data?.pagination?.total ?? 0}
+          isLoading={isCountsLoading}
+          tone="text-accent-red"
+        />
+      </Card>
+
       <BusinessFilters filters={filters} onChange={handleFilterChange} />
 
-      {businessesQuery.error ? <FormError message={businessesQuery.error.message} className="mt-4 rounded-md" /> : null}
+      {businessesQuery.error ? <FormError message={businessesQuery.error.message} /> : null}
 
       {businessesQuery.isLoading ? (
-        <section className="mt-4 rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm font-medium text-slate-500">
+        <Card className="px-6 py-12 text-center text-sm font-medium text-bone-500">
           Đang tải danh sách hộ kinh doanh...
-        </section>
+        </Card>
       ) : businessesQuery.data?.rows?.length ? (
-        <div className="mt-4">
-          <BusinessTable
-            rows={businessesQuery.data.rows}
-            pagination={businessesQuery.data.pagination}
-            page={filters.page}
-            onPageChange={(page) => handleFilterChange('page', page)}
-            onEdit={(business) => navigate(`/businesses/${business._id}/edit`)}
-            onToggleStatus={setSelectedBusiness}
-          />
-        </div>
+        <BusinessTable
+          rows={businessesQuery.data.rows}
+          pagination={businessesQuery.data.pagination}
+          page={filters.page}
+          onPageChange={(page) => handleFilterChange('page', page)}
+          onEdit={(business) => navigate(`/businesses/${business._id}/edit`)}
+          onToggleStatus={setSelectedBusiness}
+        />
       ) : (
-        <section className="mt-4 rounded-lg border border-slate-200 bg-white px-6 py-12 text-center text-sm font-medium text-slate-500">
+        <Card className="px-6 py-12 text-center text-sm font-medium text-bone-500">
           Chưa có hộ kinh doanh nào
-        </section>
+        </Card>
       )}
     </>
   );
 
   return (
     <>
-      <div className="min-h-screen bg-[#F8F9FA] pb-20 lg:hidden">
+      <div className="min-h-screen bg-bone-50 pb-24 lg:hidden">
         <MobileTopHeader title="Hộ kinh doanh" />
 
-        <main className="px-4 pt-5">
-          <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
-            <p className="text-xs font-bold uppercase text-[#2D7A7F]">Business Units</p>
-            <h1 className="mt-2 text-2xl font-bold text-slate-950">Danh sách hộ kinh doanh</h1>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Quản lý và theo dõi các đơn vị kinh doanh trực thuộc hệ thống.
-            </p>
-            <button
-              type="button"
-              onClick={() => navigate('/businesses/create')}
-              className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-md bg-[#2D7A7F] text-sm font-bold text-white transition hover:bg-[#25696d]"
-            >
-              + Thêm hộ kinh doanh
-            </button>
-          </div>
-
+        <main className="space-y-4 px-4 pt-4">
           {renderBusinessContent()}
         </main>
+
+        <button
+          type="button"
+          onClick={() => navigate('/businesses/create')}
+          className="fixed bottom-24 right-5 z-30 grid h-14 w-14 place-items-center rounded-full bg-primary-700 text-white shadow-2 transition-brand hover:scale-[1.04] hover:bg-primary-800 active:scale-[0.95]"
+          aria-label="Thêm hộ kinh doanh"
+        >
+          <Icon name="plus" className="h-7 w-7" />
+        </button>
       </div>
 
       <DashboardLayout
@@ -144,30 +151,17 @@ export const BusinessListPage = () => {
         onUnsupportedAction={handleUnsupportedAction}
         desktopOnly
       >
-        <div className="mx-auto max-w-[1180px]">
-          <nav className="mb-6 flex items-center gap-3 text-xs font-bold text-slate-500">
-            <button type="button" onClick={() => navigate('/dashboard')} className="hover:text-[#2D7A7F]">
-              Dashboard
-            </button>
-            <span>&gt;</span>
-            <span className="text-[#2D7A7F]">Hộ kinh doanh</span>
-          </nav>
+        <div className="mx-auto max-w-[1180px] space-y-6">
+          <div className="flex items-center justify-between gap-6">
+            <nav className="flex items-center gap-3 text-xs font-bold text-bone-500">
+              <button type="button" onClick={() => navigate('/dashboard')} className="transition-brand hover:text-primary-600">
+                Dashboard
+              </button>
+              <span>&gt;</span>
+              <span className="text-primary-600">Hộ kinh doanh</span>
+            </nav>
 
-          <div className="mb-7 flex items-center justify-between gap-6 rounded-lg border border-slate-200 bg-white p-6">
-            <div>
-              <p className="text-xs font-bold uppercase text-[#2D7A7F]">Business Units</p>
-              <h1 className="mt-2 text-4xl font-bold tracking-normal text-slate-950">Danh sách hộ kinh doanh</h1>
-              <p className="mt-2 text-sm font-medium text-slate-500">
-                Quản lý và theo dõi các đơn vị kinh doanh trực thuộc hệ thống.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => navigate('/businesses/create')}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-[#2D7A7F] px-6 text-sm font-bold text-white transition hover:bg-[#25696d]"
-            >
-              + Thêm hộ kinh doanh
-            </button>
+            <Button onClick={() => navigate('/businesses/create')}>+ Thêm hộ kinh doanh</Button>
           </div>
 
           {renderBusinessContent()}
