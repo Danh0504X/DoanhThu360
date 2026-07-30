@@ -14,6 +14,10 @@ import { DashboardPage } from '../pages/dashboard/DashboardPage.jsx';
 import { RevenueCreatePage } from '../pages/revenues/RevenueCreatePage.jsx';
 import { RevenueEditPage } from '../pages/revenues/RevenueEditPage.jsx';
 import { RevenueListPage } from '../pages/revenues/RevenueListPage.jsx';
+import { AdminOverviewPage } from '../pages/admin/AdminOverviewPage.jsx';
+import { AdminUsersPage } from '../pages/admin/AdminUsersPage.jsx';
+import { AdminSettingsPage } from '../pages/admin/AdminSettingsPage.jsx';
+import { AdminRoute } from './AdminRoute.jsx';
 import { ProtectedRoute } from './ProtectedRoute.jsx';
 import { PublicRoute } from './PublicRoute.jsx';
 import { NotFoundPage } from './NotFoundPage.jsx';
@@ -65,6 +69,13 @@ export const AppRoutes = () => (
       <Route path="/account/change-password" element={<ChangePasswordPage />} />
       <Route path="/account/verify-email" element={<VerifyEmailPage />} />
       <Route path="/analytics" element={<AnalyticsPage />} />
+    </Route>
+
+    <Route element={<AdminRoute />}>
+      <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+      <Route path="/admin/overview" element={<AdminOverviewPage />} />
+      <Route path="/admin/users" element={<AdminUsersPage />} />
+      <Route path="/admin/settings" element={<AdminSettingsPage />} />
     </Route>
 
     <Route path="/" element={<Navigate to="/dashboard" replace />} />

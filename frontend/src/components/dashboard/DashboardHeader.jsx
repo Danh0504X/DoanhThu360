@@ -1,11 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 import { Icon } from './DashboardIcons.jsx';
 import { NotificationBell } from './NotificationBell.jsx';
+import { useAuth } from '../../hooks/useAuth.js';
 
 export const DashboardHeader = ({
   keyword,
   onKeywordChange,
   onProfileClick,
-}) => (
+}) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
+  return (
   <header className="hidden h-[72px] items-center justify-between border-b border-bone-200 bg-white px-8 lg:flex">
     <div className="text-2xl font-bold text-primary-800">Doanh Thu 360</div>
 
@@ -23,6 +30,18 @@ export const DashboardHeader = ({
 
       <NotificationBell triggerClassName="relative grid h-10 w-10 place-items-center rounded-sm text-bone-600 transition-brand hover:bg-bone-100 hover:text-primary-800" />
 
+      {isAdmin ? (
+        <button
+          type="button"
+          onClick={() => navigate('/admin')}
+          className="grid h-10 w-10 place-items-center rounded-sm text-bone-600 transition-brand hover:bg-bone-100 hover:text-primary-800"
+          aria-label="Quản trị hệ thống"
+          title="Quản trị hệ thống"
+        >
+          <Icon name="shield" className="h-5 w-5" />
+        </button>
+      ) : null}
+
       <button
         type="button"
         onClick={onProfileClick}
@@ -34,4 +53,5 @@ export const DashboardHeader = ({
       </button>
     </div>
   </header>
-);
+  );
+};

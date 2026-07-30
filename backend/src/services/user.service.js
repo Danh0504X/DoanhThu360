@@ -43,7 +43,45 @@ export const createUser = async (payload = {}) => {
 };
 
 export const getUsers = async (filter = {}) => {
-  return User.find(filter).select(selectUserFields).sort({ createdAt: -1 });
+  const query = {};
+  const page = Number(filter.page) > 0 ? Number(filter.page) : 1;
+  const limit = Number(filter.limit) > 0 ? Number(filter.limit) : 10;
+
+  if (filter.role && filter.role !== 'all') {
+    query.role = filter.role;
+  }
+
+  if (filter.status && filter.status !== 'all') {
+    query.status = filter.status;
+  }
+
+  if (filter.keyword) {
+    const keywordRegex = new RegExp(filter.keyword.trim(), 'i');
+    query.$or = [
+      { username: keywordRegex },
+      { email: keywordRegex },
+      { name: keywordRegex },
+    ];
+  }
+
+  const [rows, total] = await Promise.all([
+    User.find(query)
+      .select(selectUserFields)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit),
+    User.countDocuments(query),
+  ]);
+
+  return {
+    data: rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  };
 };
 
 export const getUserById = async (userId) => {

@@ -9,6 +9,11 @@ const getRequestMeta = (req) => ({
   ipAddress: req.ip || req.socket?.remoteAddress || null,
 });
 
+export const getRegistrationStatus = asyncHandler(async (req, res) => {
+  const result = await authService.getRegistrationStatus();
+  return sendSuccess(res, 'Registration status', result);
+});
+
 export const register = asyncHandler(async (req, res) => {
   const { username, email, password, name } = req.body;
 

@@ -12,6 +12,7 @@ import {
 import { hashToken } from '../utils/hash.js';
 import { createError } from '../utils/errors.js';
 import { generateOtpCode, sendPasswordResetCode } from './email.service.js';
+import { getAppSettings } from './setting.service.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const SALT_ROUNDS = 12;
@@ -72,7 +73,17 @@ const sanitizeUser = (user) => ({
 
 // ─── Register ────────────────────────────────────────────────────────────────
 
+export const getRegistrationStatus = async () => {
+  const settings = await getAppSettings();
+  return { registrationEnabled: settings.registrationEnabled };
+};
+
 export const registerUser = async ({ username, email, password, name }) => {
+  const { registrationEnabled } = await getRegistrationStatus();
+  if (!registrationEnabled) {
+    throw createError('Đăng ký tài khoản mới hiện đang tạm khoá.', 403);
+  }
+
   const orConditions = [];
   if (username) orConditions.push({ username: username.toLowerCase() });
   if (email) orConditions.push({ email: email.toLowerCase() });

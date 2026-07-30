@@ -10,7 +10,8 @@ import { useAuth } from '../../hooks/useAuth.js';
  */
 export const MobileTopHeader = ({ title }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -76,6 +77,19 @@ export const MobileTopHeader = ({ title }) => {
               <Icon name="user" className="h-4 w-4" />
               Cá nhân
             </button>
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/admin');
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm font-medium text-bone-700 transition-brand hover:bg-bone-50"
+              >
+                <Icon name="shield" className="h-4 w-4" />
+                Quản trị hệ thống
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={handleLogout}

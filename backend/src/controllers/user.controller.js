@@ -16,7 +16,7 @@ export const createUserController = asyncHandler(async (req, res) => {
 });
 
 export const getUsersController = asyncHandler(async (req, res) => {
-  const users = await getUsers();
+  const users = await getUsers(req.query);
   return sendSuccess(res, 'Users retrieved successfully', users);
 });
 

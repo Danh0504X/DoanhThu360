@@ -11,6 +11,7 @@ import { FormSuccess } from '../../components/ui/FormSuccess.jsx';
 import { PasswordInput } from '../../components/ui/PasswordInput.jsx';
 import { TextInput } from '../../components/ui/TextInput.jsx';
 import { useAuth } from '../../hooks/useAuth.js';
+import { usePublicRegistrationStatus } from '../../hooks/useAdmin.js';
 import { registerSchema } from '../../schemas/register.schema.js';
 
 const buildUsernameFromEmail = (email) => {
@@ -31,6 +32,8 @@ export const RegisterPage = () => {
   const { register: registerAccount } = useAuth();
   const [globalError, setGlobalError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const registrationStatusQuery = usePublicRegistrationStatus();
+  const isRegistrationClosed = registrationStatusQuery.data === false;
 
   const {
     register,
@@ -82,6 +85,17 @@ export const RegisterPage = () => {
       )}
     >
       <AuthCard>
+        {isRegistrationClosed ? (
+          <div className="py-4 text-center">
+            <p className="text-base font-bold text-bone-800">Đăng ký tài khoản mới hiện đang tạm khoá</p>
+            <p className="mt-2 text-sm leading-6 text-bone-500">
+              Hệ thống hiện không nhận đăng ký tài khoản mới. Vui lòng quay lại sau hoặc liên hệ quản trị viên.
+            </p>
+            <Button className="mt-5" fullWidth onClick={() => navigate('/login')}>
+              Về trang đăng nhập
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <FormError message={globalError} />
           <FormSuccess message={successMessage} />
@@ -127,6 +141,7 @@ export const RegisterPage = () => {
             Đăng ký
           </Button>
         </form>
+        )}
       </AuthCard>
     </AuthLayout>
   );
